@@ -1,79 +1,261 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import {
-  Camera, Video, Mic, FileText, MapPin, Clock, Building2,
-  CheckCircle2, ArrowRight, ShieldAlert, AlertTriangle, Users,
-  ChevronLeft, Sparkles, RefreshCw
+  Camera, Video, Mic, FileText, MapPin, Clock,
+  CheckCircle2, ArrowRight, AlertTriangle, Users,
+  ChevronLeft, Sparkles, RefreshCw, MicOff, Volume2, VolumeX,
+  Square, ImageIcon, Film
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSpeechSynthesis, useSpeechRecognition } from "@/hooks/use-speech";
+import { useIncidents, type StoredIncident } from "@/hooks/use-incidents";
+import { type AIResult } from "@/app/api/analyze/route";
 
 type MethodType = "photo" | "video" | "voice" | "text" | null;
 
+// ─── Typewriter hook ───────────────────────────────────────────────────────────
+function useTypewriter(text: string, speed = 18, active = false) {
+  const [displayed, setDisplayed] = useState("");
+  const idxRef = useRef(0);
+  useEffect(() => {
+    if (!active) { setDisplayed(""); idxRef.current = 0; return; }
+    setDisplayed(""); idxRef.current = 0;
+    const id = setInterval(() => {
+      idxRef.current += 1;
+      setDisplayed(text.slice(0, idxRef.current));
+      if (idxRef.current >= text.length) clearInterval(id);
+    }, speed);
+    return () => clearInterval(id);
+  }, [text, speed, active]);
+  return displayed;
+}
+
 export default function ReportIncidentPage() {
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const router = useRouter();
+
+  const [step, setStep]     = useState<1 | 2 | 3>(1);
   const [method, setMethod] = useState<MethodType>(null);
-  
-  // Auto-detected metadata
-  const [location, setLocation] = useState("Welding Zone B");
-  const [site, setSite] = useState("Manufacturing Plant 01");
-  const [department, setDepartment] = useState("Welding");
+
+  // Media state
+  const [photoPreview,  setPhotoPreview]  = useState<string | null>(null);
+  const [videoPreview,  setVideoPreview]  = useState<string | null>(null);
+  const [audioUrl,      setAudioUrl]      = useState<string | null>(null);
+  const [isRecording,   setIsRecording]   = useState(false);
+  const [recordSeconds, setRecordSeconds] = useState(0);
+
+  // Context fields — auto-fetched from browser
+  const [location,     setLocation]     = useState("Chitkara University, Rajpura");
+  const [locationLoading, setLocationLoading] = useState(false);
   const [detectedTime, setDetectedTime] = useState("");
   const [textDescription, setTextDescription] = useState("");
-  
-  // AI analysis state
-  const [analyzing, setAnalyzing] = useState(false);
-  const [analysisStep, setAnalysisStep] = useState(0);
 
+  // AI / analysis state
+  const [analyzing,    setAnalyzing]    = useState(false);
+  const [analysisStep, setAnalysisStep] = useState(0);
+  const [resultReady,  setResultReady]  = useState(false);
+  const [aiResult,     setAiResult]     = useState<AIResult | null>(null);
+
+  // Refs
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
+  const mediaRecRef   = useRef<MediaRecorder | null>(null);
+  const mediaBlobRef  = useRef<Blob | null>(null);
+  const chunksRef     = useRef<BlobPart[]>([]);
+  const timerRef      = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Hooks
+  const { speak, stop: stopSpeech, speaking } = useSpeechSynthesis();
+  const { transcript, state: recState, supported: recSupported, startListening, stopListening } = useSpeechRecognition();
+  const { addIncident } = useIncidents();
+
+  const typedSummary = useTypewriter(aiResult?.summary || "", 18, resultReady);
+
+  // ── Auto-read AI brief when result appears ────────────────────────────────
+  useEffect(() => {
+    if (!resultReady || !aiResult) return;
+    const readoutText =
+      `Alert! ${aiResult.title} detected. Severity: ${aiResult.severity}. ` +
+      `Confidence score: ${aiResult.confidence} percent. ` +
+      `${aiResult.recommendation} ` +
+      `Recommended teams: ${aiResult.teams.join(", ")}.`;
+    speak(readoutText, 0.9);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resultReady, aiResult]);
+  // Sync speech-to-text transcript → description field
+  useEffect(() => { if (transcript) setTextDescription(transcript); }, [transcript]);
+
+  // Auto-fetch time on mount
   useEffect(() => {
     const now = new Date();
-    setDetectedTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+    setDetectedTime(now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
+  }, []);
+  // ── Read query param ?method= on mount to auto-select method ─────────────
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const m = params.get("method") as MethodType;
+    if (m && ["photo", "video", "voice", "text"].includes(m)) {
+      activateMethod(m);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleSelectMethod = (m: MethodType) => {
+  // ── Media handlers ────────────────────────────────────────────────────────
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    mediaBlobRef.current = file;
+    setPhotoPreview(URL.createObjectURL(file));
+  };
+
+  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    mediaBlobRef.current = file;
+    setVideoPreview(URL.createObjectURL(file));
+  };
+
+  const startAudioRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      chunksRef.current = [];
+      const mr = new MediaRecorder(stream);
+      mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+      mr.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        mediaBlobRef.current = blob;
+        setAudioUrl(URL.createObjectURL(blob));
+        stream.getTracks().forEach((t) => t.stop());
+      };
+      mr.start();
+      mediaRecRef.current = mr;
+      setIsRecording(true);
+      setRecordSeconds(0);
+      timerRef.current = setInterval(() => setRecordSeconds((s) => s + 1), 1000);
+    } catch {
+      alert("Microphone access denied. Please allow microphone permission.");
+    }
+  };
+
+  const stopAudioRecording = () => {
+    mediaRecRef.current?.stop();
+    setIsRecording(false);
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+  };
+
+  // ── Core method activation (used from both card click and query param) ─────
+  const activateMethod = useCallback((m: MethodType) => {
     setMethod(m);
     setStep(2);
-  };
+    if (m === "photo") setTimeout(() => photoInputRef.current?.click(), 150);
+    if (m === "video") setTimeout(() => videoInputRef.current?.click(), 150);
+    if (m === "voice") setTimeout(() => startAudioRecording(), 150);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const handleStartAnalysis = () => {
+  const toBase64 = (blob: Blob) => new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve((reader.result as string).split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+
+  // ── Analysis ──────────────────────────────────────────────────────────────
+  const handleStartAnalysis = async () => {
     setStep(3);
     setAnalyzing(true);
-    setAnalysisStep(1);
+    setAnalysisStep(0);
+    setResultReady(false);
+    
+    // Fake progress steps while API runs
+    const intervals = [1, 2, 3, 4, 5].map((s, i) => setTimeout(() => setAnalysisStep(s), (i + 1) * 800));
 
-    const t1 = setTimeout(() => setAnalysisStep(2), 600);
-    const t2 = setTimeout(() => setAnalysisStep(3), 1200);
-    const t3 = setTimeout(() => setAnalysisStep(4), 1800);
-    const t4 = setTimeout(() => {
+    try {
+      let imageBase64;
+      let imageMime;
+      
+      if (method === "photo" && mediaBlobRef.current) {
+        imageBase64 = await toBase64(mediaBlobRef.current);
+        imageMime = mediaBlobRef.current.type || "image/jpeg";
+      }
+
+      const res = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          description: textDescription,
+          location,
+          method,
+          imageBase64,
+          imageMime
+        })
+      });
+
+      const data: AIResult = await res.json();
+      if (!res.ok) throw new Error("API error");
+
+      setAiResult(data);
+      
+      const incident: StoredIncident = {
+        id:             `INC-${Date.now()}`,
+        title:          data.title,
+        severity:       data.severity,
+        status:         "pending",
+        location,
+        description:    textDescription || `Reported via ${method} at ${location}`,
+        aiSummary:      data.summary,
+        recommendation: data.recommendation,
+        hazards:        data.hazards,
+        teams:          data.teams,
+        confidence:     data.confidence,
+        reportedAt:     new Date().toISOString(),
+        method:         method ?? "text",
+        mediaBlob:      mediaBlobRef.current || undefined,
+      };
+      
+      addIncident(incident);
       setAnalysisStep(5);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to analyze incident.");
+    } finally {
+      intervals.forEach(clearTimeout);
       setAnalyzing(false);
-    }, 2400);
-
-    return () => {
-      clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4);
-    };
+      setResultReady(true);
+    }
   };
+
+  const hasMedia =
+    (method === "photo" && !!photoPreview) ||
+    (method === "video" && !!videoPreview) ||
+    (method === "voice" && !!audioUrl) ||
+    method === "text";
+
+  const fmtSecs = (s: number) =>
+    `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] font-sans text-slate-900 antialiased p-4 sm:p-6 lg:p-8">
+      {/* Hidden file inputs */}
+      <input ref={photoInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhotoChange} />
+      <input ref={videoInputRef} type="file" accept="video/*" capture="camcorder" className="hidden" onChange={handleVideoChange} />
+
       <div className="mx-auto max-w-2xl">
-        
-        {/* Header navigation */}
+        {/* Header */}
         <div className="mb-6 flex items-center justify-between">
-          <Link
-            href="/dashboard"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors"
-          >
-            <ChevronLeft className="h-4 w-4" />
-            Back to Dashboard
+          <Link href="/dashboard" className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors">
+            <ChevronLeft className="h-4 w-4" />Back to Dashboard
           </Link>
           <span className="text-xs font-mono font-bold text-slate-400">Step {step} of 3</span>
         </div>
 
-        {/* ========================================================================= */}
-        {/* STEP 1: SELECT REPORT METHOD                                               */}
-        {/* ========================================================================= */}
+        {/* ================================================================= */}
+        {/* STEP 1 – SELECT METHOD                                             */}
+        {/* ================================================================= */}
         {step === 1 && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
             <div className="text-center">
@@ -81,18 +263,17 @@ export default function ReportIncidentPage() {
               <p className="text-sm text-slate-500 mt-1">Tell us what happened. AI will handle the rest.</p>
             </div>
 
-            {/* 4 Large Touch-Friendly Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {[
-                { id: "photo", label: "Upload Photo", icon: Camera, emoji: "📷", desc: "Take or select photo" },
-                { id: "video", label: "Upload Video", icon: Video,  emoji: "🎥", desc: "Record or attach clip" },
-                { id: "voice", label: "Record Voice", icon: Mic,    emoji: "🎤", desc: "Hands-free audio report" },
-                { id: "text",  label: "Describe Incident", icon: FileText, emoji: "✏️", desc: "Type quick description" },
+                { id: "photo", label: "Take Photo",        emoji: "📷", desc: "Opens camera to capture image" },
+                { id: "video", label: "Record Video",      emoji: "🎥", desc: "Opens camera to record a clip" },
+                { id: "voice", label: "Record Voice",      emoji: "🎤", desc: "Records audio from microphone" },
+                { id: "text",  label: "Describe Incident", emoji: "✏️", desc: "Type or speak your description" },
               ].map((item) => (
                 <button
                   key={item.id}
-                  onClick={() => handleSelectMethod(item.id as MethodType)}
-                  className="flex flex-col items-center justify-center p-8 rounded-2xl border border-slate-200 bg-white shadow-xs hover:border-amber-400 hover:shadow-md transition-all text-center min-h-[160px] active:scale-98"
+                  onClick={() => activateMethod(item.id as MethodType)}
+                  className="flex flex-col items-center justify-center p-8 rounded-2xl border border-slate-200 bg-white shadow-xs hover:border-amber-400 hover:shadow-md transition-all text-center min-h-[160px] active:scale-[0.98]"
                 >
                   <span className="text-4xl mb-3">{item.emoji}</span>
                   <h3 className="text-lg font-bold text-slate-900">{item.label}</h3>
@@ -103,116 +284,160 @@ export default function ReportIncidentPage() {
           </motion.div>
         )}
 
-        {/* ========================================================================= */}
-        {/* STEP 2: AUTO CONTEXT & SUBMIT                                              */}
-        {/* ========================================================================= */}
+        {/* ================================================================= */}
+        {/* STEP 2 – PREVIEW + CONTEXT                                         */}
+        {/* ================================================================= */}
         {step === 2 && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
             <div className="flex items-center justify-between border-b border-slate-200 pb-4">
               <div>
                 <h1 className="text-2xl font-extrabold text-slate-900">Incident Details</h1>
-                <p className="text-xs text-slate-500">Auto-detected context. Verify or adjust if needed.</p>
+                <p className="text-xs text-slate-500">Review captured media and confirm context.</p>
               </div>
-              <button
-                onClick={() => setStep(1)}
-                className="text-xs font-semibold text-slate-500 hover:text-slate-900"
-              >
+              <button onClick={() => { setStep(1); setPhotoPreview(null); setVideoPreview(null); setAudioUrl(null); }}
+                className="text-xs font-semibold text-slate-500 hover:text-slate-900">
                 Change Method
               </button>
             </div>
 
-            {/* Media Selected Preview */}
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">
-                  {method === "photo" && "📷"}
-                  {method === "video" && "🎥"}
-                  {method === "voice" && "🎤"}
-                  {method === "text"  && "✏️"}
-                </span>
-                <div>
-                  <p className="text-sm font-bold text-slate-900 uppercase">Input Payload</p>
-                  <p className="text-xs text-slate-500">
-                    {method === "photo" && "Photo captured • Ready for vision AI"}
-                    {method === "video" && "Video attached • 1080p clip ready"}
-                    {method === "voice" && "Audio note recorded • 12 seconds"}
-                    {method === "text"  && "Text note created"}
-                  </p>
+            {/* ── PHOTO ── */}
+            {method === "photo" && (
+              <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-bold text-slate-700 flex items-center gap-2"><ImageIcon className="h-4 w-4 text-amber-500" /> Photo Capture</span>
+                  {photoPreview && <button onClick={() => { setPhotoPreview(null); photoInputRef.current?.click(); }} className="text-xs text-blue-600 font-semibold hover:underline">Retake</button>}
                 </div>
-              </div>
-              <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-            </div>
-
-            {/* Text description input if text method chosen */}
-            {method === "text" && (
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-700">Incident Description</label>
-                <textarea
-                  rows={3}
-                  value={textDescription}
-                  onChange={(e) => setTextDescription(e.target.value)}
-                  placeholder="e.g. Fire hazard identified near welding area with sparks near combustible material."
-                  className="w-full rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-amber-500 outline-none"
-                />
+                {photoPreview ? (
+                  <img src={photoPreview} alt="Captured incident" className="w-full rounded-xl object-cover max-h-64 border border-slate-200" />
+                ) : (
+                  <button onClick={() => photoInputRef.current?.click()}
+                    className="w-full flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 py-10 text-slate-400 hover:border-amber-400 hover:text-amber-500 transition-all">
+                    <Camera className="h-10 w-10" />
+                    <span className="text-sm font-semibold">Tap to open camera</span>
+                  </button>
+                )}
               </div>
             )}
 
-            {/* Auto-detected metadata card */}
+            {/* ── VIDEO ── */}
+            {method === "video" && (
+              <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-bold text-slate-700 flex items-center gap-2"><Film className="h-4 w-4 text-blue-500" /> Video Clip</span>
+                  {videoPreview && <button onClick={() => { setVideoPreview(null); videoInputRef.current?.click(); }} className="text-xs text-blue-600 font-semibold hover:underline">Re-record</button>}
+                </div>
+                {videoPreview ? (
+                  <video src={videoPreview} controls className="w-full rounded-xl max-h-64 border border-slate-200 bg-black" />
+                ) : (
+                  <button onClick={() => videoInputRef.current?.click()}
+                    className="w-full flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 py-10 text-slate-400 hover:border-blue-400 hover:text-blue-500 transition-all">
+                    <Video className="h-10 w-10" />
+                    <span className="text-sm font-semibold">Tap to record video</span>
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* ── VOICE RECORDING ── */}
+            {method === "voice" && (
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 space-y-4">
+                <span className="text-sm font-bold text-slate-700 flex items-center gap-2"><Mic className="h-4 w-4 text-red-500" /> Voice Recording</span>
+                {isRecording ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <span className="relative flex h-3 w-3">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                          <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500" />
+                        </span>
+                        <span className="text-sm font-bold text-red-700">Recording…</span>
+                      </div>
+                      <span className="font-mono text-sm font-bold text-red-600">{fmtSecs(recordSeconds)}</span>
+                    </div>
+                    <button onClick={stopAudioRecording}
+                      className="w-full flex items-center justify-center gap-2 rounded-xl bg-red-500 py-3 text-sm font-bold text-white hover:bg-red-600 transition-all">
+                      <Square className="h-4 w-4 fill-white" /> Stop Recording
+                    </button>
+                  </div>
+                ) : audioUrl ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                      <span className="text-xs font-semibold text-emerald-800">Recording saved — {fmtSecs(recordSeconds)}</span>
+                    </div>
+                    <audio src={audioUrl} controls className="w-full rounded-xl" />
+                    <button onClick={() => { setAudioUrl(null); startAudioRecording(); }} className="text-xs font-semibold text-blue-600 hover:underline">Re-record</button>
+                  </div>
+                ) : (
+                  <button onClick={startAudioRecording}
+                    className="w-full flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-red-300 bg-red-50 py-10 hover:border-red-400 transition-all">
+                    <Mic className="h-10 w-10 text-red-400" />
+                    <span className="text-sm font-semibold text-red-600">Tap to start recording</span>
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* ── TEXT / SPEAK ── */}
+            {method === "text" && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-700">Incident Description</label>
+                  {recSupported && (
+                    <button onClick={() => recState === "listening" ? stopListening() : startListening()}
+                      className={cn(
+                        "inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all",
+                        recState === "listening" ? "bg-red-500 text-white animate-pulse" : "bg-slate-100 text-slate-700 hover:bg-amber-100 hover:text-amber-800"
+                      )}>
+                      {recState === "listening" ? <><MicOff className="h-3.5 w-3.5" /> Stop</> : <><Mic className="h-3.5 w-3.5" /> Speak</>}
+                    </button>
+                  )}
+                </div>
+                {recState === "listening" && (
+                  <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2">
+                    <span className="relative flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
+                    </span>
+                    <span className="text-xs font-semibold text-red-700">Listening… speak clearly</span>
+                  </div>
+                )}
+                <textarea rows={4} value={textDescription} onChange={(e) => setTextDescription(e.target.value)}
+                  placeholder="e.g. Fire hazard near welding area with sparks close to combustible material."
+                  className="w-full rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-amber-500 outline-none" />
+              </div>
+            )}
+
+            {/* Auto-detected metadata */}
             <div className="rounded-2xl border border-slate-200 bg-white p-5 space-y-4 shadow-xs">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Detected Context</h3>
-              
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                {/* Location */}
+                {/* Location — auto from GPS */}
                 <div className="space-y-1">
-                  <span className="text-slate-500 block font-medium">Location</span>
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-amber-500" />
-                    <input
-                      value={location}
-                      onChange={(e) => setLocation(e.target.value)}
-                      className="font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 w-full text-xs"
-                    />
+                  <span className="text-slate-500 block font-medium">Location (GPS)</span>
+                  <div className="flex items-center gap-2 rounded-lg bg-slate-50 border border-slate-200 px-2 py-1.5">
+                    <MapPin className={cn("h-4 w-4 shrink-0", locationLoading ? "text-slate-300 animate-pulse" : "text-amber-500")} />
+                    <span className="font-bold text-slate-900 truncate">{location}</span>
                   </div>
                 </div>
-
-                {/* Site */}
+                {/* Time — auto from system clock */}
                 <div className="space-y-1">
-                  <span className="text-slate-500 block font-medium">Site</span>
-                  <div className="flex items-center gap-2">
-                    <Building2 className="h-4 w-4 text-blue-600" />
-                    <input
-                      value={site}
-                      onChange={(e) => setSite(e.target.value)}
-                      className="font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 w-full text-xs"
-                    />
-                  </div>
-                </div>
-
-                {/* Department */}
-                <div className="space-y-1">
-                  <span className="text-slate-500 block font-medium">Department</span>
-                  <input
-                    value={department}
-                    onChange={(e) => setDepartment(e.target.value)}
-                    className="font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 w-full text-xs"
-                  />
-                </div>
-
-                {/* Time */}
-                <div className="space-y-1">
-                  <span className="text-slate-500 block font-medium">Time (Auto Detected)</span>
-                  <div className="flex items-center gap-2 font-mono font-bold text-slate-900 pt-1">
-                    <Clock className="h-4 w-4 text-slate-400" />
+                  <span className="text-slate-500 block font-medium">Time (Auto)</span>
+                  <div className="flex items-center gap-2 rounded-lg bg-slate-50 border border-slate-200 px-2 py-1.5 font-mono font-bold text-slate-900">
+                    <Clock className="h-4 w-4 text-slate-400 shrink-0" />
                     <span>{detectedTime}</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* One Large Primary Button: "Analyse & Submit" in Safety Amber */}
             <button
               onClick={handleStartAnalysis}
-              className="w-full flex items-center justify-center gap-3 rounded-2xl bg-amber-500 py-4 text-lg font-extrabold text-slate-950 shadow-md hover:bg-amber-400 transition-all active:scale-98"
+              disabled={!hasMedia}
+              className={cn(
+                "w-full flex items-center justify-center gap-3 rounded-2xl py-4 text-lg font-extrabold text-slate-950 shadow-md transition-all active:scale-[0.98]",
+                hasMedia ? "bg-amber-500 hover:bg-amber-400" : "bg-slate-200 text-slate-400 cursor-not-allowed"
+              )}
             >
               <Sparkles className="h-5 w-5" />
               <span>Analyse &amp; Submit</span>
@@ -220,13 +445,11 @@ export default function ReportIncidentPage() {
           </motion.div>
         )}
 
-        {/* ========================================================================= */}
-        {/* STEP 3: PAGE 3 — AI ANALYSIS & RESULT                                     */}
-        {/* ========================================================================= */}
+        {/* ================================================================= */}
+        {/* STEP 3 – AI RESULT                                                 */}
+        {/* ================================================================= */}
         {step === 3 && (
           <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="space-y-6">
-            
-            {/* Analyzing Processing Animation */}
             {analyzing ? (
               <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center space-y-6 shadow-xs">
                 <div className="flex justify-center">
@@ -234,128 +457,109 @@ export default function ReportIncidentPage() {
                     <RefreshCw className="h-8 w-8 text-amber-500 animate-spin" />
                   </div>
                 </div>
-
                 <div>
                   <h2 className="text-xl font-extrabold text-slate-900">RescueFlow AI is analysing the incident</h2>
-                  <p className="text-xs text-slate-500 mt-1 font-mono">Running hazard classification engine...</p>
+                  <p className="text-xs text-slate-500 mt-1 font-mono">Running hazard classification engine…</p>
                 </div>
-
-                {/* Checklist */}
                 <div className="max-w-xs mx-auto text-left space-y-2 text-xs font-semibold">
-                  {[
-                    "Media analysed",
-                    "Hazard identified",
-                    "Severity calculated",
-                    "Response team determined",
-                    "Incident report generated",
-                  ].map((task, idx) => (
+                  {["Media analysed", "Hazard identified", "Severity calculated", "Response team determined", "Incident report generated"].map((task, idx) => (
                     <div key={task} className="flex items-center gap-2.5">
-                      {analysisStep > idx ? (
-                        <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-                      ) : (
-                        <div className="h-4 w-4 rounded-full border border-slate-300 shrink-0" />
-                      )}
-                      <span className={analysisStep > idx ? "text-slate-900 font-bold" : "text-slate-400"}>
-                        {task}
-                      </span>
+                      {analysisStep > idx
+                        ? <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                        : <div className="h-4 w-4 rounded-full border border-slate-300 shrink-0" />}
+                      <span className={analysisStep > idx ? "text-slate-900 font-bold" : "text-slate-400"}>{task}</span>
                     </div>
                   ))}
                 </div>
               </div>
             ) : (
-              /* Display Result inside One Clean Card */
               <div className="space-y-6">
-                <div className="text-center">
+                <div className="flex items-center justify-between">
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700 border border-emerald-200">
                     <CheckCircle2 className="h-3.5 w-3.5" /> AI Analysis Complete
                   </span>
+                  <button
+                    onClick={() => speaking ? stopSpeech() : speak(
+                      `Alert! ${aiResult?.title} detected. Severity: ${aiResult?.severity}. ${aiResult?.recommendation} Recommended teams: ${aiResult?.teams.join(", ")}.`,
+                      0.9
+                    )}
+                    className={cn("inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all",
+                      speaking ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-blue-50 hover:text-blue-700"
+                    )}
+                  >
+                    {speaking ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
+                    {speaking ? "Stop" : "Read Aloud"}
+                  </button>
                 </div>
 
-                {/* Clean Result Card */}
                 <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-5">
-                  {/* Header Row */}
                   <div className="flex items-start justify-between border-b border-slate-100 pb-4">
                     <div>
-                      <h2 className="text-xl font-extrabold text-slate-900">Welding Fire Hazard</h2>
+                      <h2 className="text-xl font-extrabold text-slate-900">{aiResult?.title}</h2>
                       <p className="text-xs text-slate-500 mt-0.5">Location: <strong className="text-slate-900">{location}</strong></p>
                     </div>
-                    <span className="rounded-xl bg-orange-500 px-3 py-1 text-xs font-black text-white uppercase tracking-wider shadow-xs">
-                      HIGH
+                    <span className={cn("rounded-xl px-3 py-1 text-xs font-black text-white uppercase tracking-wider shadow-xs animate-pulse", aiResult?.severityColor)}>
+                      {aiResult?.severity}
                     </span>
                   </div>
 
-                  {/* Key Stats Grid */}
                   <div className="grid grid-cols-3 gap-3 text-center bg-slate-50 rounded-xl p-3 border border-slate-100">
-                    <div>
-                      <span className="text-[10px] text-slate-500 block uppercase font-semibold">Location</span>
-                      <span className="text-xs font-bold text-slate-900">{location}</span>
-                    </div>
-                    <div>
-                      <span className="text-[10px] text-slate-500 block uppercase font-semibold">Workers at Risk</span>
-                      <span className="text-xs font-bold text-orange-600">3 Workers</span>
-                    </div>
-                    <div>
-                      <span className="text-[10px] text-slate-500 block uppercase font-semibold">AI Confidence</span>
-                      <span className="text-xs font-bold text-blue-600">94%</span>
-                    </div>
+                    <div><span className="text-[10px] text-slate-500 block uppercase font-semibold">Location</span><span className="text-xs font-bold text-slate-900">{location}</span></div>
+                    <div><span className="text-[10px] text-slate-500 block uppercase font-semibold">Workers at Risk</span><span className="text-xs font-bold text-orange-600">{aiResult?.workersAtRisk} Workers</span></div>
+                    <div><span className="text-[10px] text-slate-500 block uppercase font-semibold">AI Confidence</span><span className="text-xs font-bold text-blue-600">{aiResult?.confidence}%</span></div>
                   </div>
 
-                  {/* Potential Hazards */}
                   <div className="space-y-1.5">
                     <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Potential Hazards</h4>
                     <ul className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                      {["Open flame", "Flammable material nearby", "Smoke exposure"].map((h) => (
+                      {aiResult?.hazards?.map((h) => (
                         <li key={h} className="rounded-lg bg-orange-50 border border-orange-200/60 px-2.5 py-1.5 text-xs font-semibold text-orange-900 flex items-center gap-1.5">
-                          <AlertTriangle className="h-3.5 w-3.5 text-orange-600 shrink-0" />
-                          <span>{h}</span>
+                          <AlertTriangle className="h-3.5 w-3.5 text-orange-600 shrink-0" />{h}
                         </li>
                       ))}
                     </ul>
                   </div>
 
-                  {/* AI Summary */}
-                  <div className="rounded-xl bg-blue-50/60 border border-blue-200/60 p-3.5 space-y-1">
+                  <div className="rounded-xl bg-blue-50/60 border border-blue-200/60 p-3.5 space-y-1 min-h-[60px]">
                     <span className="text-xs font-bold text-blue-900 block">AI Summary</span>
                     <p className="text-xs text-blue-950 leading-relaxed italic">
-                      &ldquo;A fire hazard has been identified near the welding area with combustible material nearby.&rdquo;
+                      &ldquo;{typedSummary}<span className="animate-pulse">|</span>&rdquo;
                     </p>
                   </div>
 
-                  {/* Immediate Recommendation */}
                   <div className="rounded-xl bg-amber-50 border border-amber-200 p-3.5 space-y-1">
                     <span className="text-xs font-bold text-amber-900 block uppercase">Immediate Recommendation</span>
-                    <p className="text-xs font-semibold text-amber-950">
-                      Stop welding operations and isolate the affected zone.
-                    </p>
+                    <p className="text-xs font-semibold text-amber-950">{aiResult?.recommendation}</p>
                   </div>
 
-                  {/* Recommended Teams */}
                   <div className="space-y-1.5">
                     <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Recommended Teams</h4>
                     <div className="flex flex-wrap gap-2">
-                      {["Fire Safety Team", "Safety Officer", "Site Supervisor"].map((team) => (
+                      {aiResult?.teams?.map((team) => (
                         <span key={team} className="rounded-lg bg-slate-100 border border-slate-200 px-3 py-1 text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                          <Users className="h-3.5 w-3.5 text-slate-500" />
-                          {team}
+                          <Users className="h-3.5 w-3.5 text-slate-500" />{team}
                         </span>
                       ))}
                     </div>
                   </div>
                 </div>
 
-                {/* Primary button: "Start Response Workflow" */}
-                <Link
-                  href="/dispatch"
-                  className="w-full flex items-center justify-center gap-2 rounded-2xl bg-amber-500 py-4 text-base font-extrabold text-slate-950 shadow-md hover:bg-amber-400 transition-all active:scale-98"
+                <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                  <span className="text-xs font-semibold text-emerald-800">Incident saved — visible on Dashboard &amp; Incidents list.</span>
+                </div>
+
+                <button
+                  onClick={() => { stopSpeech(); router.push("/dispatch"); }}
+                  className="w-full flex items-center justify-center gap-2 rounded-2xl bg-amber-500 py-4 text-base font-extrabold text-slate-950 shadow-md hover:bg-amber-400 transition-all active:scale-[0.98]"
                 >
                   <span>Start Response Workflow</span>
                   <ArrowRight className="h-5 w-5" />
-                </Link>
+                </button>
               </div>
             )}
           </motion.div>
         )}
-
       </div>
     </div>
   );

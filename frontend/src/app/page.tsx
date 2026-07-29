@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Activity, Shield, Brain, Radio, Camera, Video, Mic, FileText,
   ArrowRight, CheckCircle2, Building2, ChevronRight, AlertTriangle, Users
@@ -35,15 +36,13 @@ const HOW_IT_WORKS = [
 const CLIENTS = ["Tata Steel", "Siemens", "Bharat Steel", "NTPC", "L&T Construction", "Coal India"];
 
 export default function LandingPage() {
-  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const router = useRouter();
+  const goReport = (method?: string) =>
+    router.push(method ? `/report?method=${method}` : "/report");
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] font-sans text-slate-900 antialiased">
-      {/* Quick Report Modal */}
-      <QuickReportModal
-        isOpen={isReportModalOpen}
-        onClose={() => setIsReportModalOpen(false)}
-      />
+      {/* Removed modal — buttons now navigate directly to /report?method=X */}
 
       {/* ── Navbar ──────────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur-md">
@@ -73,7 +72,7 @@ export default function LandingPage() {
             </Link>
 
             <button
-              onClick={() => setIsReportModalOpen(true)}
+              onClick={() => goReport()}
               className="flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2 text-sm font-bold text-slate-950 shadow-sm hover:bg-amber-400 transition-all active:scale-95"
             >
               <span>🚨 Report Incident</span>
@@ -101,7 +100,7 @@ export default function LandingPage() {
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
             {/* Primary CTA (Most visually important) */}
             <button
-              onClick={() => setIsReportModalOpen(true)}
+              onClick={() => goReport()}
               className="w-full sm:w-auto flex items-center justify-center gap-3 rounded-2xl bg-amber-500 px-8 py-4 text-lg font-bold text-slate-950 shadow-md hover:bg-amber-400 transition-all active:scale-98"
             >
               <span className="text-xl">🚨</span>
@@ -125,14 +124,14 @@ export default function LandingPage() {
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
-                { icon: Camera, label: "Photo" },
-                { icon: Video,  label: "Video" },
-                { icon: Mic,    label: "Voice" },
-                { icon: FileText,label: "Text" },
-              ].map(({ icon: Icon, label }) => (
+                { icon: Camera,   label: "Photo", method: "photo" },
+                { icon: Video,    label: "Video", method: "video" },
+                { icon: Mic,      label: "Voice", method: "voice" },
+                { icon: FileText, label: "Text",  method: "text"  },
+              ].map(({ icon: Icon, label, method }) => (
                 <div
                   key={label}
-                  onClick={() => setIsReportModalOpen(true)}
+                  onClick={() => goReport(method)}
                   className="flex items-center justify-center gap-2 rounded-xl bg-slate-50 border border-slate-200/80 py-3 px-4 font-semibold text-slate-700 text-sm hover:border-amber-400 hover:bg-amber-50/50 cursor-pointer transition-all"
                 >
                   <Icon className="h-4 w-4 text-slate-500" />
