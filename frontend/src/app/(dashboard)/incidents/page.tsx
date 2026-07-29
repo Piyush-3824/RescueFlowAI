@@ -15,17 +15,17 @@ type Severity = StoredIncident["severity"];
 type SortOption = "newest" | "oldest" | "severity";
 
 const SEVERITY_BADGE: Record<Severity, string> = {
-  critical: "bg-red-600 text-white",
-  high:     "bg-orange-500 text-white",
-  moderate: "bg-amber-500 text-slate-950",
-  low:      "bg-emerald-600 text-white",
+  critical: "bg-red-500/20 text-red-400 border border-red-500/30 shadow-[0_0_8px_rgba(239,68,68,0.2)]",
+  high:     "bg-orange-500/20 text-orange-400 border border-orange-500/30",
+  moderate: "bg-amber-500/20 text-amber-400 border border-amber-500/30",
+  low:      "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30",
 };
 
 const SEVERITY_BORDER: Record<Severity, string> = {
-  critical: "border-l-red-600",
-  high:     "border-l-orange-500",
-  moderate: "border-l-amber-500",
-  low:      "border-l-emerald-600",
+  critical: "border-l-red-500/50",
+  high:     "border-l-orange-500/50",
+  moderate: "border-l-amber-500/50",
+  low:      "border-l-emerald-500/50",
 };
 
 const SEVERITY_ORDER: Record<Severity, number> = {
@@ -124,11 +124,11 @@ export default function IncidentsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900">Incident Management</h1>
-          <p className="text-xs text-slate-500">
+          <h1 className="text-2xl font-extrabold text-white/90">Incident Management</h1>
+          <p className="text-xs text-white/40">
             {filtered.length} incident{filtered.length !== 1 ? "s" : ""} found
             {liveCount > 0 && (
-              <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+              <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 inline-block" />
                 {liveCount} reported by you
               </span>
@@ -145,30 +145,30 @@ export default function IncidentsPage() {
       </div>
 
       {/* Filter Bar */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs space-y-3">
+      <div className="glass-card p-4 shadow-xs space-y-3">
         {/* Row 1: Search + Sort */}
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30" />
             <input
               type="text"
               value={query}
               onChange={(e) => { setQuery(e.target.value); setPage(1); }}
               placeholder="Search by ID, title, location…"
-              className="w-full rounded-xl border border-slate-200 bg-slate-50/60 pl-9 pr-3 py-2 text-xs text-slate-900 focus:border-amber-500 focus:bg-white outline-none"
+              className="w-full rounded-xl border border-white/[0.08] bg-white/[0.04] pl-9 pr-3 py-2 text-xs text-white/90 focus:border-amber-500 focus:bg-white/[0.08] outline-none placeholder:text-white/30"
             />
           </div>
           {/* Sort */}
           <div className="relative">
-            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/30" />
             <select
               value={sortBy}
               onChange={e => { setSortBy(e.target.value as SortOption); setPage(1); }}
-              className="appearance-none rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 pr-8 text-xs font-semibold text-slate-700 focus:border-amber-500 outline-none cursor-pointer"
+              className="appearance-none rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-2 pr-8 text-xs font-semibold text-white/70 focus:border-amber-500 outline-none cursor-pointer"
             >
-              <option value="newest">Newest First</option>
-              <option value="oldest">Oldest First</option>
-              <option value="severity">By Severity</option>
+              <option value="newest" className="bg-slate-900 text-white">Newest First</option>
+              <option value="oldest" className="bg-slate-900 text-white">Oldest First</option>
+              <option value="severity" className="bg-slate-900 text-white">By Severity</option>
             </select>
           </div>
         </div>
@@ -183,7 +183,7 @@ export default function IncidentsPage() {
                 onClick={() => { setSeverity(s); setPage(1); }}
                 className={cn(
                   "rounded-xl px-3 py-1 text-xs font-bold capitalize transition-all",
-                  severity === s ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  severity === s ? "bg-white/[0.12] text-white/90 border border-white/[0.2]" : "bg-white/[0.04] text-white/60 hover:bg-white/[0.1] border border-transparent"
                 )}
               >
                 {s}
@@ -193,19 +193,19 @@ export default function IncidentsPage() {
 
           {/* Date Range */}
           <div className="flex items-center gap-2 ml-auto">
-            <CalendarDays className="h-4 w-4 text-slate-400 shrink-0" />
+            <CalendarDays className="h-4 w-4 text-white/30 shrink-0" />
             <input
               type="date"
               value={dateFrom}
               onChange={e => { setDateFrom(e.target.value); setPage(1); }}
-              className="rounded-xl border border-slate-200 bg-slate-50 px-2 py-1.5 text-xs font-semibold text-slate-700 focus:border-amber-500 outline-none"
+              className="rounded-xl border border-white/[0.08] bg-white/[0.04] px-2 py-1.5 text-xs font-semibold text-white/70 focus:border-amber-500 outline-none [color-scheme:dark]"
             />
-            <span className="text-xs text-slate-400 font-medium">to</span>
+            <span className="text-xs text-white/30 font-medium">to</span>
             <input
               type="date"
               value={dateTo}
               onChange={e => { setDateTo(e.target.value); setPage(1); }}
-              className="rounded-xl border border-slate-200 bg-slate-50 px-2 py-1.5 text-xs font-semibold text-slate-700 focus:border-amber-500 outline-none"
+              className="rounded-xl border border-white/[0.08] bg-white/[0.04] px-2 py-1.5 text-xs font-semibold text-white/70 focus:border-amber-500 outline-none [color-scheme:dark]"
             />
             {(dateFrom || dateTo) && (
               <button
@@ -221,10 +221,10 @@ export default function IncidentsPage() {
 
       {/* Incidents Grid */}
       {paged.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-slate-200 bg-white py-16 text-center">
-          <AlertTriangle className="mx-auto h-10 w-10 text-slate-300 mb-3" />
-          <p className="text-sm font-bold text-slate-500">No incidents match your filters</p>
-          <p className="text-xs text-slate-400 mt-1">Try adjusting the date range or search query</p>
+        <div className="rounded-2xl border border-dashed border-white/[0.08] bg-white dark:bg-slate-900 py-16 text-center">
+          <AlertTriangle className="mx-auto h-10 w-10 text-white/20 mb-3" />
+          <p className="text-sm font-bold text-white/40">No incidents match your filters</p>
+          <p className="text-xs text-white/30 mt-1">Try adjusting the date range or search query</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -236,7 +236,7 @@ export default function IncidentsPage() {
                 key={inc.id}
                 href={`/incidents/${inc.id}`}
                 className={cn(
-                  "group block rounded-2xl border border-slate-200 bg-white p-5 shadow-xs hover:shadow-md transition-all border-l-4",
+                  "group block glass-card p-5 hover:bg-white/[0.06] transition-all border-l-4",
                   SEVERITY_BORDER[inc.severity]
                 )}
               >
@@ -244,14 +244,14 @@ export default function IncidentsPage() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-mono text-[11px] font-bold text-slate-400">{inc.id}</span>
+                      <span className="font-mono text-[11px] font-bold text-white/30">{inc.id}</span>
                       {isLive && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[9px] font-black text-emerald-700 uppercase tracking-wide">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[9px] font-black text-emerald-400 uppercase tracking-wide">
                           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 inline-block" /> Live
                         </span>
                       )}
                     </div>
-                    <h3 className="text-base font-bold text-slate-900 group-hover:text-amber-600 transition-colors mt-0.5 truncate">
+                    <h3 className="text-base font-bold text-white/90 group-hover:text-amber-600 transition-colors mt-0.5 truncate">
                       {inc.title}
                     </h3>
                   </div>
@@ -261,20 +261,20 @@ export default function IncidentsPage() {
                 </div>
 
                 {/* Description */}
-                <p className="text-xs text-slate-600 mt-2 line-clamp-2 leading-relaxed">
+                <p className="text-xs text-white/60 mt-2 line-clamp-2 leading-relaxed">
                   {inc.description}
                 </p>
 
                 {/* AI Summary if available */}
                 {inc.aiSummary && inc.aiSummary !== inc.description && (
-                  <p className="text-xs text-blue-700 bg-blue-50 rounded-lg px-3 py-2 mt-2 line-clamp-2 italic border border-blue-100">
+                  <p className="text-xs text-blue-300 bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-2 mt-2 line-clamp-2 italic border ">
                     &ldquo;{inc.aiSummary}&rdquo;
                   </p>
                 )}
 
                 {/* Footer */}
-                <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3">
-                  <div className="flex items-center gap-3 text-[11px] font-medium text-slate-500">
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-white/[0.08] pt-3">
+                  <div className="flex items-center gap-3 text-[11px] font-medium text-white/40">
                     <span className="flex items-center gap-1">
                       <MethodIcon className="h-3 w-3" />
                       {inc.method}
@@ -282,8 +282,8 @@ export default function IncidentsPage() {
                     <span>📍 {inc.location}</span>
                   </div>
                   <div className="text-right">
-                    <p className="font-mono text-[11px] font-bold text-slate-700">{fmtDate(inc.reportedAt)}</p>
-                    <p className="font-mono text-[10px] text-slate-400">{fmtTime(inc.reportedAt)}</p>
+                    <p className="font-mono text-[11px] font-bold text-white/70">{fmtDate(inc.reportedAt)}</p>
+                    <p className="font-mono text-[10px] text-white/30">{fmtTime(inc.reportedAt)}</p>
                   </div>
                 </div>
               </Link>
@@ -298,7 +298,7 @@ export default function IncidentsPage() {
           <button
             onClick={() => setPage(p => Math.max(1, p - 1))}
             disabled={page === 1}
-            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-40"
+            className="rounded-lg glass-card border-0 px-3 py-1.5 text-xs font-bold text-white/60 hover:bg-white/[0.08] disabled:opacity-40"
           >
             ← Prev
           </button>
@@ -308,7 +308,7 @@ export default function IncidentsPage() {
               onClick={() => setPage(p)}
               className={cn(
                 "h-8 w-8 rounded-lg text-xs font-bold transition-all",
-                page === p ? "bg-slate-900 text-white" : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                page === p ? "bg-white/[0.12] text-white/90 border border-white/[0.2]" : "glass-card border-0 text-white/60 hover:bg-white/[0.08]"
               )}
             >
               {p}
@@ -317,7 +317,7 @@ export default function IncidentsPage() {
           <button
             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
-            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-40"
+            className="rounded-lg glass-card border-0 px-3 py-1.5 text-xs font-bold text-white/60 hover:bg-white/[0.08] disabled:opacity-40"
           >
             Next →
           </button>
@@ -326,3 +326,4 @@ export default function IncidentsPage() {
     </div>
   );
 }
+

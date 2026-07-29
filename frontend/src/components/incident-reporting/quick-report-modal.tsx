@@ -75,23 +75,23 @@ export function QuickReportModal({ isOpen, onClose }: QuickReportModalProps) {
           initial={{ opacity: 0, scale: 0.96, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.96, y: 15 }}
-          className="relative z-10 w-full max-w-xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl my-auto"
+          className="relative z-10 w-full max-w-xl overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl my-auto"
         >
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-6 py-4">
+          <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 px-6 py-4">
             <div className="flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500 text-slate-950 font-bold">
                 <AlertTriangle className="h-5 w-5" />
               </div>
               <div>
-                <h2 className="text-base font-extrabold text-slate-900">Report an Incident</h2>
+                <h2 className="text-base font-extrabold text-slate-900 dark:text-slate-50">Report an Incident</h2>
                 <p className="text-xs text-slate-500">Fast reporting • Step {step} of 3</p>
               </div>
             </div>
 
             <button
               onClick={onClose}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900"
             >
               <X className="h-4 w-4" />
             </button>
@@ -112,10 +112,10 @@ export function QuickReportModal({ isOpen, onClose }: QuickReportModalProps) {
                     <button
                       key={item.id}
                       onClick={() => handleSelectMethod(item.id as ReportMethod)}
-                      className="flex flex-col items-center justify-center p-6 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-amber-50/40 hover:border-amber-400 transition-all text-center min-h-[120px]"
+                      className="flex flex-col items-center justify-center p-6 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 hover:bg-amber-50/40 hover:border-amber-400 transition-all text-center min-h-[120px]"
                     >
                       <span className="text-3xl mb-2">{item.emoji}</span>
-                      <span className="text-xs font-bold text-slate-900">{item.label}</span>
+                      <span className="text-xs font-bold text-slate-900 dark:text-slate-50">{item.label}</span>
                     </button>
                   ))}
                 </div>
@@ -125,22 +125,22 @@ export function QuickReportModal({ isOpen, onClose }: QuickReportModalProps) {
             {/* Step 2 */}
             {step === 2 && (
               <div className="space-y-4">
-                <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-3 text-xs">
-                  <div className="flex justify-between border-b border-slate-200 pb-2">
+                <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-4 space-y-3 text-xs">
+                  <div className="flex justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
                     <span className="text-slate-500 font-medium">Location</span>
-                    <span className="font-bold text-slate-900">📍 {gpsLocation}</span>
+                    <span className="font-bold text-slate-900 dark:text-slate-50">📍 {gpsLocation}</span>
                   </div>
-                  <div className="flex justify-between border-b border-slate-200 pb-2">
+                  <div className="flex justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
                     <span className="text-slate-500 font-medium">Site</span>
-                    <span className="font-bold text-slate-900">🏭 {siteName}</span>
+                    <span className="font-bold text-slate-900 dark:text-slate-50">🏭 {siteName}</span>
                   </div>
-                  <div className="flex justify-between border-b border-slate-200 pb-2">
+                  <div className="flex justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
                     <span className="text-slate-500 font-medium">Department</span>
-                    <span className="font-bold text-slate-900">{department}</span>
+                    <span className="font-bold text-slate-900 dark:text-slate-50">{department}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-500 font-medium">Time</span>
-                    <span className="font-mono font-bold text-slate-900">{timestamp}</span>
+                    <span className="font-mono font-bold text-slate-900 dark:text-slate-50">{timestamp}</span>
                   </div>
                 </div>
 
@@ -162,13 +162,13 @@ export function QuickReportModal({ isOpen, onClose }: QuickReportModalProps) {
                     <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-amber-50 text-amber-500">
                       <RefreshCw className="h-6 w-6 animate-spin" />
                     </div>
-                    <p className="text-sm font-bold text-slate-900">RescueFlow AI is analysing the incident</p>
+                    <p className="text-sm font-bold text-slate-900 dark:text-slate-50">RescueFlow AI is analysing the incident</p>
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-2 text-xs">
+                    <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-4 space-y-2 text-xs">
                       <div className="flex justify-between items-center">
-                        <h4 className="font-extrabold text-slate-900 text-sm">Welding Fire Hazard</h4>
+                        <h4 className="font-extrabold text-slate-900 dark:text-slate-50 text-sm">Welding Fire Hazard</h4>
                         <span className="rounded bg-orange-500 px-2 py-0.5 font-bold text-white uppercase text-[10px]">HIGH</span>
                       </div>
                       <p className="text-slate-600">Location: {gpsLocation} • AI Confidence: 94%</p>

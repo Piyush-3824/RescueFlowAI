@@ -34,10 +34,10 @@ function toStored(m: typeof MOCK_INCIDENTS[0], idx: number): StoredIncident {
 }
 
 const SEVERITY_COLOR: Record<StoredIncident["severity"], string> = {
-  critical: "bg-red-600",
+  critical: "bg-red-500",
   high:     "bg-orange-500",
-  moderate: "bg-amber-500",
-  low:      "bg-emerald-600",
+  moderate: "bg-amber-500/10 border border-amber-500/200",
+  low:      "bg-emerald-500",
 };
 
 const LIFECYCLE_STEPS = ["Reported", "AI Analysed", "Assigned", "In Progress", "Resolved"];
@@ -112,27 +112,27 @@ export default function IncidentDetailPage() {
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <Link href="/incidents"
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-colors">
+            className="flex h-9 w-9 items-center justify-center glass-card text-white/60 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
             <ArrowLeft className="h-4 w-4" />
           </Link>
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-mono text-xs font-bold text-slate-400">{incident.id}</span>
+              <span className="font-mono text-xs font-bold text-white/30">{incident.id}</span>
               <span className={cn("rounded-md px-2 py-0.5 text-[10px] font-black uppercase text-white", SEVERITY_COLOR[incident.severity])}>
                 {incident.severity}
               </span>
               {isLive && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-black text-emerald-700">
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-black text-emerald-400">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 inline-block" /> Live
                 </span>
               )}
             </div>
-            <h1 className="text-xl font-extrabold text-slate-900">{incident.title}</h1>
+            <h1 className="text-xl font-extrabold text-white/90">{incident.title}</h1>
           </div>
         </div>
 
         <Link href="/dispatch"
-          className="flex items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-slate-950 hover:bg-amber-400 transition-all shadow-xs">
+          className="flex items-center gap-1.5 rounded-xl bg-amber-500/10 border border-amber-500/200 px-4 py-2 text-xs font-bold text-slate-950 hover:bg-amber-400 transition-all shadow-xs">
           <Radio className="h-3.5 w-3.5" />
           <span>Manage Response</span>
         </Link>
@@ -145,12 +145,12 @@ export default function IncidentDetailPage() {
         <div className="lg:col-span-7 space-y-6">
 
           {/* Evidence Card */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Uploaded Evidence</h3>
+          <div className="glass-card p-5 shadow-xs space-y-4">
+            <div className="flex items-center justify-between border-b border-white/[0.08] pb-2">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-white/30">Uploaded Evidence</h3>
               {incident.mediaBlob && (
                 <button onClick={handleDownload}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-bold text-white hover:bg-slate-700 transition-all">
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-white/[0.06] border border-white/[0.08] px-3 py-1.5 text-xs font-bold text-white/90 hover:bg-white/[0.1] hover:border-white/[0.15] transition-all">
                   <Download className="h-3.5 w-3.5" />
                   Download Proof
                 </button>
@@ -160,25 +160,25 @@ export default function IncidentDetailPage() {
             {/* ── Real media from IDB ── */}
             {mediaUrl && isImage && (
               <div className="space-y-2">
-                <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                <div className="flex items-center gap-2 text-xs font-bold text-white/70">
                   <Camera className="h-4 w-4 text-amber-500" /> Photo Evidence
                 </div>
-                <img src={mediaUrl} alt="Incident evidence" className="w-full rounded-xl border border-slate-200 object-cover max-h-64" />
+                <img src={mediaUrl} alt="Incident evidence" className="w-full rounded-xl border border-white/[0.08] object-cover max-h-64" />
               </div>
             )}
 
             {mediaUrl && isVideo && (
               <div className="space-y-2">
-                <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                <div className="flex items-center gap-2 text-xs font-bold text-white/70">
                   <Video className="h-4 w-4 text-blue-500" /> Video Evidence
                 </div>
-                <video src={mediaUrl} controls className="w-full rounded-xl border border-slate-200 max-h-64 bg-black" />
+                <video src={mediaUrl} controls className="w-full rounded-xl border border-white/[0.08] max-h-64 bg-black" />
               </div>
             )}
 
             {mediaUrl && isAudio && (
               <div className="space-y-2">
-                <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                <div className="flex items-center gap-2 text-xs font-bold text-white/70">
                   <Mic className="h-4 w-4 text-red-500" /> Voice Recording
                 </div>
                 <audio src={mediaUrl} controls className="w-full rounded-xl" />
@@ -188,67 +188,67 @@ export default function IncidentDetailPage() {
             {/* ── Fallback for seeded / text incidents ── */}
             {!mediaUrl && (
               <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-center space-y-2">
-                  <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg bg-white border border-slate-200 text-amber-500 shadow-xs">
+                <div className="rounded-xl border border-white/[0.08] bg-white/[0.04] p-4 text-center space-y-2">
+                  <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg bg-white dark:bg-slate-900 border border-white/[0.08] text-amber-500 shadow-xs">
                     <Camera className="h-5 w-5" />
                   </div>
-                  <p className="text-xs font-bold text-slate-800">Photo Evidence</p>
-                  <p className="text-[10px] text-slate-400 italic">Not available for historical records</p>
+                  <p className="text-xs font-bold text-white/80">Photo Evidence</p>
+                  <p className="text-[10px] text-white/30 italic">Not available for historical records</p>
                 </div>
-                <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-center space-y-2">
-                  <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg bg-white border border-slate-200 text-blue-600 shadow-xs">
+                <div className="rounded-xl border border-white/[0.08] bg-white/[0.04] p-4 text-center space-y-2">
+                  <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg bg-white dark:bg-slate-900 border border-white/[0.08] text-blue-600 shadow-xs">
                     <Video className="h-5 w-5" />
                   </div>
-                  <p className="text-xs font-bold text-slate-800">Video Evidence</p>
-                  <p className="text-[10px] text-slate-400 italic">Not available for historical records</p>
+                  <p className="text-xs font-bold text-white/80">Video Evidence</p>
+                  <p className="text-[10px] text-white/30 italic">Not available for historical records</p>
                 </div>
               </div>
             )}
 
             {/* Reporter Description */}
             <div className="space-y-1">
-              <span className="text-xs font-bold text-slate-700 block">Reporter Description</span>
-              <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-200">
+              <span className="text-xs font-bold text-white/70 block">Reporter Description</span>
+              <p className="text-xs text-white/60 leading-relaxed bg-white/[0.04] p-3 rounded-xl border border-white/[0.08]">
                 {incident.description}
               </p>
             </div>
 
             {/* Method badge */}
-            <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
+            <div className="flex items-center gap-2 text-xs text-white/40 font-medium">
               <span>Reported via:</span>
-              <span className="font-bold text-slate-800 capitalize flex items-center gap-1">
+              <span className="font-bold text-white/80 capitalize flex items-center gap-1">
                 {incident.method === "photo" && <Camera className="h-3.5 w-3.5 text-amber-500" />}
                 {incident.method === "video" && <Video className="h-3.5 w-3.5 text-blue-500" />}
                 {incident.method === "voice" && <Mic className="h-3.5 w-3.5 text-red-500" />}
-                {incident.method === "text"  && <FileText className="h-3.5 w-3.5 text-slate-400" />}
+                {incident.method === "text"  && <FileText className="h-3.5 w-3.5 text-white/30" />}
                 {incident.method}
               </span>
             </div>
           </div>
 
           {/* AI Analysis Card */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+          <div className="glass-card p-5 shadow-xs space-y-4">
+            <div className="flex items-center justify-between border-b border-white/[0.08] pb-2">
               <div className="flex items-center gap-2">
                 <Brain className="h-4 w-4 text-blue-600" />
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900">Gemini AI Analysis</h3>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-white/90">Gemini AI Analysis</h3>
               </div>
               <span className="text-xs font-bold text-blue-600">{incident.confidence}% Confidence</span>
             </div>
 
             <div className="grid grid-cols-2 gap-3 text-xs">
-              <div className="rounded-xl bg-slate-50 p-3 border border-slate-100">
-                <span className="text-slate-500 block font-medium">Severity</span>
+              <div className="rounded-xl bg-white/[0.04] p-3 border border-white/[0.08]">
+                <span className="text-white/40 block font-medium">Severity</span>
                 <span className={cn("font-bold capitalize", {
                   "text-red-600":    incident.severity === "critical",
                   "text-orange-600": incident.severity === "high",
-                  "text-amber-600":  incident.severity === "moderate",
+                  "text-amber-400":  incident.severity === "moderate",
                   "text-emerald-600":incident.severity === "low",
                 })}>{incident.severity}</span>
               </div>
-              <div className="rounded-xl bg-slate-50 p-3 border border-slate-100">
-                <span className="text-slate-500 block font-medium">Status</span>
-                <span className="font-bold text-slate-900 capitalize">{incident.status.replace("_", " ")}</span>
+              <div className="rounded-xl bg-white/[0.04] p-3 border border-white/[0.08]">
+                <span className="text-white/40 block font-medium">Status</span>
+                <span className="font-bold text-white/90 capitalize">{incident.status.replace("_", " ")}</span>
               </div>
             </div>
 
@@ -258,7 +258,7 @@ export default function IncidentDetailPage() {
             </div>
 
             {incident.recommendation && (
-              <div className="rounded-xl bg-amber-50 border border-amber-200 p-3.5 space-y-1">
+              <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 border border-amber-200 p-3.5 space-y-1">
                 <span className="text-xs font-bold text-amber-900 block uppercase">Recommendation</span>
                 <p className="text-xs text-amber-950 leading-relaxed">{incident.recommendation}</p>
               </div>
@@ -267,8 +267,8 @@ export default function IncidentDetailPage() {
             {incident.hazards?.length > 0 && (
               <div className="grid grid-cols-2 gap-3 text-xs">
                 <div className="space-y-1.5">
-                  <span className="font-bold text-slate-700 block">Identified Hazards</span>
-                  <ul className="space-y-1 text-slate-600">
+                  <span className="font-bold text-white/70 block">Identified Hazards</span>
+                  <ul className="space-y-1 text-white/60">
                     {incident.hazards.map(h => (
                       <li key={h} className="flex items-center gap-1.5">
                         <span className="h-1.5 w-1.5 rounded-full bg-red-500 shrink-0" />{h}
@@ -289,15 +289,15 @@ export default function IncidentDetailPage() {
         <div className="lg:col-span-5 space-y-6">
 
           {/* Response Status */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-4">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-2">Response Status</h3>
+          <div className="glass-card p-5 shadow-xs space-y-4">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-white/30 border-b border-white/[0.08] pb-2">Response Status</h3>
 
             {incident.teams?.length > 0 && (
               <div className="space-y-2">
-                <span className="text-xs font-bold text-slate-700 block">Assigned Teams</span>
+                <span className="text-xs font-bold text-white/70 block">Assigned Teams</span>
                 <div className="space-y-1.5">
                   {incident.teams.map(team => (
-                    <div key={team} className="flex items-center justify-between rounded-xl bg-slate-50 p-2.5 border border-slate-200/80 text-xs font-semibold text-slate-800">
+                    <div key={team} className="flex items-center justify-between rounded-xl bg-white/[0.04] p-2.5 border border-slate-200/80 text-xs font-semibold text-white/80">
                       <div className="flex items-center gap-2">
                         <Users className="h-3.5 w-3.5 text-amber-500" />{team}
                       </div>
@@ -311,39 +311,39 @@ export default function IncidentDetailPage() {
             )}
 
             <div className="grid grid-cols-2 gap-3 text-xs pt-1">
-              <div className="rounded-xl bg-slate-50 p-3 border border-slate-200/80">
-                <span className="text-slate-500 block font-medium text-[10px]">Voice Alert</span>
+              <div className="rounded-xl bg-white/[0.04] p-3 border border-slate-200/80">
+                <span className="text-white/40 block font-medium text-[10px]">Voice Alert</span>
                 <span className="font-bold text-emerald-600">Broadcast Sent</span>
               </div>
-              <div className="rounded-xl bg-slate-50 p-3 border border-slate-200/80">
-                <span className="text-slate-500 block font-medium text-[10px]">Notifications</span>
+              <div className="rounded-xl bg-white/[0.04] p-3 border border-slate-200/80">
+                <span className="text-white/40 block font-medium text-[10px]">Notifications</span>
                 <span className="font-bold text-blue-600">SMS &amp; Push Active</span>
               </div>
             </div>
           </div>
 
           {/* Incident Information */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-3 text-xs">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-2">Incident Information</h3>
-            <div className="space-y-2 text-slate-700 font-medium">
-              <div className="flex justify-between py-1 border-b border-slate-100">
-                <span className="text-slate-500">Location</span>
-                <span className="font-bold text-slate-900">{incident.location}</span>
+          <div className="glass-card p-5 shadow-xs space-y-3 text-xs">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-white/30 border-b border-white/[0.08] pb-2">Incident Information</h3>
+            <div className="space-y-2 text-white/70 font-medium">
+              <div className="flex justify-between py-1 border-b border-white/[0.08]">
+                <span className="text-white/40">Location</span>
+                <span className="font-bold text-white/90">{incident.location}</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-slate-100">
-                <span className="text-slate-500">Date</span>
-                <span className="font-bold text-slate-900">{fmtDate(incident.reportedAt)}</span>
+              <div className="flex justify-between py-1 border-b border-white/[0.08]">
+                <span className="text-white/40">Date</span>
+                <span className="font-bold text-white/90">{fmtDate(incident.reportedAt)}</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-slate-100">
-                <span className="text-slate-500">Time</span>
-                <span className="font-bold text-slate-900">{fmtTime(incident.reportedAt)}</span>
+              <div className="flex justify-between py-1 border-b border-white/[0.08]">
+                <span className="text-white/40">Time</span>
+                <span className="font-bold text-white/90">{fmtTime(incident.reportedAt)}</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-slate-100">
-                <span className="text-slate-500">Method</span>
-                <span className="font-bold text-slate-900 capitalize">{incident.method}</span>
+              <div className="flex justify-between py-1 border-b border-white/[0.08]">
+                <span className="text-white/40">Method</span>
+                <span className="font-bold text-white/90 capitalize">{incident.method}</span>
               </div>
               <div className="flex justify-between py-1">
-                <span className="text-slate-500">AI Confidence</span>
+                <span className="text-white/40">AI Confidence</span>
                 <span className="font-bold text-blue-600">{incident.confidence}%</span>
               </div>
             </div>
@@ -352,8 +352,8 @@ export default function IncidentDetailPage() {
       </div>
 
       {/* Lifecycle */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs space-y-4">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Incident Lifecycle</h3>
+      <div className="glass-card p-6 shadow-xs space-y-4">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-white/30">Incident Lifecycle</h3>
         <div className="flex items-center justify-between">
           {LIFECYCLE_STEPS.map((title, idx) => {
             const step = idx + 1;
@@ -365,18 +365,18 @@ export default function IncidentDetailPage() {
                   <div className={cn(
                     "flex h-9 w-9 items-center justify-center rounded-full text-xs font-extrabold transition-all",
                     isDone    ? "bg-emerald-600 text-white" :
-                    isCurrent ? "bg-amber-500 text-slate-950 ring-4 ring-amber-100" :
-                                "bg-slate-100 text-slate-400 border border-slate-200"
+                    isCurrent ? "bg-amber-500/10 border border-amber-500/200 text-slate-950 ring-4 ring-amber-100" :
+                                "bg-white/[0.08] text-white/30 border border-white/[0.08]"
                   )}>
                     {isDone ? <Check className="h-4 w-4 stroke-[3]" /> : step}
                   </div>
                   <span className={cn("text-xs font-bold",
-                    isDone ? "text-emerald-700" : isCurrent ? "text-amber-600" : "text-slate-400"
+                    isDone ? "text-emerald-400" : isCurrent ? "text-amber-400" : "text-white/30"
                   )}>{title}</span>
                 </div>
                 {idx < LIFECYCLE_STEPS.length - 1 && (
                   <div className={cn("h-1 flex-1 mx-3 rounded-full transition-all",
-                    currentStep > idx + 1 ? "bg-emerald-500" : "bg-slate-100"
+                    currentStep > idx + 1 ? "bg-emerald-500" : "bg-white/[0.08]"
                   )} />
                 )}
               </React.Fragment>

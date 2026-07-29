@@ -5,50 +5,57 @@
 @tailwind utilities;
 
 /* ─────────────────────────────────────────────────────────────────────────── */
-/*  RescueFlowAI — Enterprise Industrial Light SaaS Theme                       */
+/*  RescueFlowAI — Apple-style Glassmorphism Dark Theme                       */
 /* ─────────────────────────────────────────────────────────────────────────── */
+
 @layer base {
   :root {
-    --background:         210 40% 98%;   /* #F8FAFC – Clean light background */
-    --foreground:         222 47% 11%;   /* #0F172A – Main Navy text        */
+    /* Base surface tokens */
+    --background:         220 20% 10%;
+    --foreground:         210 20% 96%;
 
-    --card:               0 0% 100%;     /* #FFFFFF – Pure white card        */
+    --card:               0 0% 100%;
     --card-foreground:    222 47% 11%;
 
-    --popover:            0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover:            220 20% 12%;
+    --popover-foreground: 210 20% 96%;
 
-    --primary:            38 92% 50%;    /* #F59E0B – Safety Amber Primary  */
+    --primary:            38 92% 50%;
     --primary-foreground: 222 47% 11%;
 
-    --secondary:          210 40% 96.1%; /* #F1F5F9                           */
-    --secondary-foreground: 222 47% 11%;
+    --secondary:          220 20% 18%;
+    --secondary-foreground: 210 20% 80%;
 
-    --muted:              210 40% 96.1%;
-    --muted-foreground:   215 16% 47%;   /* #64748B                           */
+    --muted:              220 20% 16%;
+    --muted-foreground:   215 16% 55%;
 
-    --accent:             221 83% 53%;   /* #2563EB – AI / Info Blue         */
+    --accent:             221 83% 60%;
     --accent-foreground:  0 0% 100%;
 
-    --destructive:        0 72% 51%;     /* #DC2626 – Critical Red           */
+    --destructive:        0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border:             214 32% 91%;    /* #E2E8F0 – Crisp borders         */
-    --input:              214 32% 91%;
+    --border:             220 20% 22%;
+    --input:              220 20% 18%;
     --ring:               38 92% 50%;
 
-    --radius: 0.75rem;
+    --radius: 0.875rem;
 
-    /* ── Safety-domain palette ─────────────────────────────────────────── */
-    --navy-main:     222 47% 11%;   /* #0F172A */
-    --slate-sec:     215 16% 35%;   /* #475569 */
-    --safety-amber:  38 92% 50%;    /* #F59E0B */
-    --info-blue:     221 83% 53%;   /* #2563EB */
-    --high-orange:   21 90% 48%;    /* #F97316 */
-    --critical-red:  0 72% 51%;     /* #DC2626 */
-    --safe-green:    142 72% 36%;   /* #16A34A */
+    /* Glass surface variables */
+    --glass-bg:           rgba(255, 255, 255, 0.06);
+    --glass-bg-hover:     rgba(255, 255, 255, 0.10);
+    --glass-border:       rgba(255, 255, 255, 0.12);
+    --glass-border-hover: rgba(255, 255, 255, 0.20);
+    --glass-blur:         16px;
 
-    --sidebar-w-expanded:  260px;
+    /* Safety-domain palette */
+    --safety-amber:  38 92% 50%;
+    --info-blue:     221 83% 60%;
+    --high-orange:   21 90% 55%;
+    --critical-red:  0 72% 55%;
+    --safe-green:    142 72% 42%;
+
+    --sidebar-w-expanded:  240px;
     --sidebar-w-collapsed: 72px;
   }
 }
@@ -56,50 +63,169 @@
 @layer base {
   * {
     @apply border-border;
+    box-sizing: border-box;
   }
 
   html {
-    color-scheme: light;
-    scroll-behavior: smooth;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color-scheme: dark;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+    /* Disable smooth scroll so backdrop blurs don't stutter during navigation */
+    data-scroll-behavior: smooth;
   }
 
   body {
-    @apply bg-background text-foreground antialiased selection:bg-amber-100 selection:text-amber-900;
+    @apply antialiased;
+    color: hsl(var(--foreground));
     font-feature-settings: "rlig" 1, "calt" 1, "cv05" 1;
+    /* Single fixed background painted once by the GPU — no re-paint on scroll */
+    background-color: #090e1a;
+    background-image:
+      radial-gradient(ellipse 80% 60% at 20% -5%,  rgba(245,158,11,0.12) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 80%  80%, rgba(37,99,235,0.10) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 40% at 50%  50%, rgba(139,92,246,0.06) 0%, transparent 60%);
+    background-attachment: fixed;
+    /* Promote body background to its own compositor layer — zero repaint cost */
+    transform: translateZ(0);
+    selection-color: rgba(245,158,11,0.3);
+  }
+
+  ::selection {
+    background: rgba(245,158,11,0.25);
+    color: #fde68a;
   }
 }
 
 /* ─────────────────────────────────────────────────────────────────────────── */
-/*  Enterprise Clean Utilities                                                */
+/*  Glass utility classes — use these instead of ad-hoc backdrop-filter       */
+/*  Performance: backdrop-filter is GPU-composited, but only cheap when each  */
+/*  element has a single layer. Never nest glass inside glass.                */
 /* ─────────────────────────────────────────────────────────────────────────── */
 @layer utilities {
+
+  /* ── Core glass surface ── */
+  .glass {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+    /* Isolate the compositing layer — prevents children from triggering repaint */
+    isolation: isolate;
+  }
+
+  .glass-hover {
+    transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .glass-hover:hover {
+    background: var(--glass-bg-hover);
+    border-color: var(--glass-border-hover);
+    box-shadow: 0 8px 32px -4px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+
+  /* ── Card variants ── */
+  .glass-card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 1.125rem;
+    backdrop-filter: blur(12px) saturate(160%);
+    -webkit-backdrop-filter: blur(12px) saturate(160%);
+    box-shadow: 0 4px 24px -2px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08);
+    isolation: isolate;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+  .glass-card:hover {
+    border-color: rgba(255,255,255,0.16);
+    box-shadow: 0 8px 40px -4px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.12);
+  }
+
+  /* ── Stronger glass for sidebars/navbars ── */
+  .glass-strong {
+    background: rgba(9,14,26,0.75);
+    border-color: rgba(255,255,255,0.08);
+    backdrop-filter: blur(20px) saturate(200%);
+    -webkit-backdrop-filter: blur(20px) saturate(200%);
+    isolation: isolate;
+  }
+
+  /* ── Subtle tinted glass (amber) ── */
+  .glass-amber {
+    background: rgba(245,158,11,0.12);
+    border: 1px solid rgba(245,158,11,0.25);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  /* ── Subtle tinted glass (blue) ── */
+  .glass-blue {
+    background: rgba(37,99,235,0.12);
+    border: 1px solid rgba(37,99,235,0.25);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  /* ── Subtle tinted glass (red/critical) ── */
+  .glass-red {
+    background: rgba(220,38,38,0.12);
+    border: 1px solid rgba(220,38,38,0.25);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  /* ── Text utilities ── */
+  .text-glass-primary   { color: rgba(255,255,255,0.92); }
+  .text-glass-secondary { color: rgba(255,255,255,0.55); }
+  .text-glass-muted     { color: rgba(255,255,255,0.35); }
+
+  /* ── Divider ── */
+  .glass-divider {
+    border-color: rgba(255,255,255,0.08);
+  }
+
+  /* ── Sidebar specifics ── */
+  .glass-sidebar {
+    background: rgba(9,14,26,0.80);
+    border-right: 1px solid rgba(255,255,255,0.07);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    isolation: isolate;
+  }
+
+  /* ── Navbar specifics ── */
+  .glass-navbar {
+    background: rgba(9,14,26,0.70);
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    isolation: isolate;
+  }
+
+  /* ── Active nav item ── */
+  .nav-item-active {
+    background: rgba(245,158,11,0.18);
+    border: 1px solid rgba(245,158,11,0.30);
+    color: #fbbf24;
+    box-shadow: 0 0 16px rgba(245,158,11,0.12);
+  }
+
+  /* Clean card kept for compatibility (now glass-styled) */
   .clean-card {
-    @apply bg-white border border-slate-200 rounded-2xl shadow-sm transition-all duration-200 hover:shadow-md;
+    @apply glass-card;
   }
-
   .clean-card-subtle {
-    @apply bg-slate-50/70 border border-slate-200/80 rounded-2xl;
-  }
-
-  .navy-sidebar {
-    background-color: #0F172A;
-    color: #F8FAFC;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 1rem;
   }
 }
 
-/* Custom subtle scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
+/* ─────────────────────────────────────────────────────────────────────────── */
+/*  Scrollbar — keeps Apple-thin feel                                          */
+/* ─────────────────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
+  background: rgba(255,255,255,0.12);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94A3B8;
+  background: rgba(255,255,255,0.22);
 }

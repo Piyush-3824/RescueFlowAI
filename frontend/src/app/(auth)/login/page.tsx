@@ -24,7 +24,7 @@ export default function LoginPage() {
       <div className="pointer-events-none absolute inset-0 opacity-[0.03] bg-[radial-gradient(#0F172A_1px,transparent_1px)] [background-size:16px_16px]" />
 
       {/* Centered White Authentication Card */}
-      <div className="relative w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-sm space-y-6">
+      <div className="relative w-full max-w-md rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 shadow-sm space-y-6">
         
         {/* RescueFlowAI Logo & Welcome */}
         <div className="text-center space-y-2">
@@ -32,11 +32,11 @@ export default function LoginPage() {
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 text-amber-400 font-bold shadow-xs">
               <Activity className="h-5 w-5 text-amber-400" />
             </div>
-            <span className="text-xl font-bold tracking-tight text-slate-900">
+            <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
               Rescue<span className="text-amber-500">FlowAI</span>
             </span>
           </Link>
-          <h1 className="text-2xl font-extrabold text-slate-900 pt-2">Welcome Back</h1>
+          <h1 className="text-2xl font-extrabold text-slate-900 dark:text-slate-50 pt-2">Welcome Back</h1>
           <p className="text-xs text-slate-500">Sign in to access your Industrial Safety Command Centre.</p>
         </div>
 
@@ -44,7 +44,7 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Email */}
           <div className="space-y-1">
-            <label className="text-xs font-bold text-slate-700 block">Work Email</label>
+            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">Work Email</label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <input
@@ -53,7 +53,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@company.com"
-                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-9 pr-3 py-2.5 text-sm text-slate-900 focus:border-amber-500 focus:bg-white outline-none transition-all font-medium"
+                className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 pl-9 pr-3 py-2.5 text-sm text-slate-900 dark:text-slate-50 focus:border-amber-500 focus:bg-white outline-none transition-all font-medium"
               />
             </div>
           </div>
@@ -61,7 +61,7 @@ export default function LoginPage() {
           {/* Password */}
           <div className="space-y-1">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-slate-700 block">Password</label>
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block">Password</label>
               <a href="#" className="text-xs font-bold text-amber-600 hover:underline">
                 Forgot Password?
               </a>
@@ -73,7 +73,7 @@ export default function LoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-9 pr-3 py-2.5 text-sm text-slate-900 focus:border-amber-500 focus:bg-white outline-none transition-all font-medium"
+                className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 pl-9 pr-3 py-2.5 text-sm text-slate-900 dark:text-slate-50 focus:border-amber-500 focus:bg-white outline-none transition-all font-medium"
               />
             </div>
           </div>
@@ -90,8 +90,8 @@ export default function LoginPage() {
 
         {/* Divider */}
         <div className="relative flex items-center justify-center">
-          <div className="w-full border-t border-slate-200" />
-          <span className="absolute bg-white px-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+          <div className="w-full border-t border-slate-200 dark:border-slate-800" />
+          <span className="absolute bg-white dark:bg-slate-900 px-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
             OR
           </span>
         </div>
@@ -100,7 +100,7 @@ export default function LoginPage() {
         <button
           type="button"
           onClick={() => { window.location.href = "/dashboard"; }}
-          className="w-full flex items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all"
+          className="w-full flex items-center justify-center gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300 transition-all"
         >
           <svg className="h-4 w-4" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />

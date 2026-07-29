@@ -15,46 +15,46 @@ export default function DispatchPage() {
     <div className="space-y-6 pb-10">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900">Response Teams</h1>
-          <p className="text-xs text-slate-500">Live deployment, status tracking and radio dispatch for emergency units.</p>
+          <h1 className="text-2xl font-extrabold text-white/90">Response Teams</h1>
+          <p className="text-xs text-white/40">Live deployment, status tracking and radio dispatch for emergency units.</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {RESPONSE_TEAMS.map((t) => (
-          <div key={t.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div key={t.id} className="glass-card p-5 space-y-4">
+            <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 border border-amber-200 text-amber-600 font-bold">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 font-bold">
                   <Users className="h-4 w-4" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900">{t.name}</h3>
-                  <p className="text-xs text-slate-500">Lead: {t.lead}</p>
+                  <h3 className="text-base font-bold text-white/90">{t.name}</h3>
+                  <p className="text-xs text-white/40">Lead: {t.lead}</p>
                 </div>
               </div>
 
-              <span className={`rounded-md px-2.5 py-0.5 text-[10px] font-black uppercase ${
-                t.status === "DISPATCHED" ? "bg-red-600 text-white" : "bg-emerald-100 text-emerald-800"
+              <span className={`rounded-md px-2.5 py-0.5 text-[9px] font-black uppercase ${
+                t.status === "DISPATCHED" ? "bg-red-500/20 text-red-400 border border-red-500/30 shadow-[0_0_8px_rgba(239,68,68,0.2)]" : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
               }`}>
                 {t.status}
               </span>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 text-xs font-semibold text-slate-700">
-              <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                <span className="text-[10px] text-slate-400 block uppercase">Assigned Zone</span>
-                <span className="text-slate-900">{t.zone}</span>
+            <div className="grid grid-cols-2 gap-2 text-xs font-semibold text-white/70">
+              <div className="bg-white/[0.04] border border-white/[0.08] p-2.5 rounded-xl border border-white/[0.08]">
+                <span className="text-[10px] text-white/30 block uppercase">Assigned Zone</span>
+                <span className="text-white/90">{t.zone}</span>
               </div>
-              <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                <span className="text-[10px] text-slate-400 block uppercase">Personnel</span>
-                <span className="text-slate-900">{t.members} Responders</span>
+              <div className="bg-white/[0.04] border border-white/[0.08] p-2.5 rounded-xl border border-white/[0.08]">
+                <span className="text-[10px] text-white/30 block uppercase">Personnel</span>
+                <span className="text-white/90">{t.members} Responders</span>
               </div>
             </div>
 
             <div className="flex items-center justify-between pt-1">
-              <span className="text-xs font-mono font-bold text-slate-500">{t.phone}</span>
-              <button className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-bold text-white hover:bg-slate-800">
+              <span className="text-xs font-mono font-bold text-white/40">{t.phone}</span>
+              <button className="flex items-center gap-1.5 rounded-xl bg-white/[0.08] hover:bg-white/[0.12] text-white/90 border border-white/[0.1] px-3 py-1.5 text-xs font-bold transition-colors">
                 <Radio className="h-3.5 w-3.5 text-amber-400" />
                 <span>Radio Connect</span>
               </button>
