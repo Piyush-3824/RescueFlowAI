@@ -4,19 +4,20 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, AlertTriangle, Radio,
-  BarChart2, Map, Settings, Activity,
-  User, ChevronRight, Shield,
+  BarChart2, FileText, Settings, Activity,
+  User, Shield, PlusCircle, Users
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MOCK_STATS, MOCK_USER } from "@/lib/mock-data";
 import { motion } from "framer-motion";
 
 const NAV_ITEMS = [
-  { label: "Command Center", href: "/dashboard",  icon: LayoutDashboard, badge: null },
+  { label: "Overview",       href: "/dashboard",  icon: LayoutDashboard, badge: null },
   { label: "Incidents",      href: "/incidents",  icon: AlertTriangle,   badge: MOCK_STATS.activeIncidents },
-  { label: "Dispatch",       href: "/dispatch",   icon: Radio,           badge: null },
+  { label: "Report Incident",href: "/report",     icon: PlusCircle,      badge: null },
+  { label: "Response Teams", href: "/dispatch",   icon: Users,           badge: null },
   { label: "Analytics",      href: "/analytics",  icon: BarChart2,       badge: null },
-  { label: "Live Map",       href: "/map",        icon: Map,             badge: null },
+  { label: "Reports",        href: "/incidents?view=reports", icon: FileText, badge: null },
 ] as const;
 
 const BOTTOM_NAV = [
@@ -26,65 +27,54 @@ const BOTTOM_NAV = [
 
 export function Sidebar() {
   const pathname = usePathname();
-
   const initials = MOCK_USER.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 
   return (
     <aside
       aria-label="Main navigation"
-      className="hidden md:flex w-[240px] shrink-0 flex-col border-r border-white/[0.06] bg-card"
+      className="hidden md:flex w-[240px] shrink-0 flex-col bg-[#0F172A] text-slate-200 shadow-xl border-r border-slate-800"
     >
       {/* Logo */}
-      <div className="flex h-16 items-center gap-2.5 border-b border-white/[0.06] px-5">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-amber-400/20 to-orange-400/10 ring-1 ring-amber-400/20">
+      <div className="flex h-16 items-center gap-2.5 border-b border-slate-800 px-5">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/20 ring-1 ring-amber-500/30">
           <Activity className="h-4 w-4 text-amber-400" aria-hidden="true" />
         </div>
-        <span className="font-bold tracking-tight text-foreground">
-          <span className="gradient-text">Rescue</span>FlowAI
+        <span className="font-bold tracking-tight text-white text-base">
+          Rescue<span className="text-amber-400">FlowAI</span>
         </span>
       </div>
 
       {/* Main nav */}
       <nav className="flex-1 overflow-y-auto p-3" aria-label="Main menu">
-        <p className="mb-2 px-3 text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/50">
-          Main Menu
+        <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+          Navigation
         </p>
-        <ul className="space-y-0.5" role="list">
+        <ul className="space-y-1" role="list">
           {NAV_ITEMS.map(({ label, href, icon: Icon, badge }) => {
-            const isActive = pathname === href || pathname.startsWith(`${href}/`);
+            const isActive = pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
             return (
               <li key={href} className="relative">
                 <Link
                   href={href}
                   aria-current={isActive ? "page" : undefined}
                   className={cn(
-                    "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-150",
+                    "group flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-all duration-150",
                     isActive
-                      ? "bg-amber-400/10 text-amber-400"
-                      : "text-muted-foreground hover:bg-white/[0.04] hover:text-foreground"
+                      ? "bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/20"
+                      : "text-slate-300 hover:bg-slate-800 hover:text-white"
                   )}
                 >
-                  {isActive && (
-                    <motion.div
-                      layoutId="sidebar-active-pill"
-                      className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-amber-400"
-                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                    />
-                  )}
-                  <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <Icon className={cn("h-4 w-4 shrink-0", isActive ? "text-slate-950" : "text-slate-400 group-hover:text-white")} aria-hidden="true" />
                   <span className="flex-1">{label}</span>
                   {badge !== null && badge > 0 && (
                     <span className={cn(
-                      "flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-bold",
+                      "flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-extrabold",
                       isActive
-                        ? "bg-amber-400/20 text-amber-400"
-                        : "bg-red-500/15 text-red-400"
+                        ? "bg-slate-950 text-amber-400"
+                        : "bg-red-500/20 text-red-400 border border-red-500/30"
                     )}>
                       {badge}
                     </span>
-                  )}
-                  {isActive && !badge && (
-                    <ChevronRight className="h-3.5 w-3.5 text-amber-400/60" aria-hidden="true" />
                   )}
                 </Link>
               </li>
@@ -93,33 +83,26 @@ export function Sidebar() {
         </ul>
 
         {/* Secondary nav */}
-        <p className="mb-2 mt-5 px-3 text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/50">
-          Account
+        <p className="mb-2 mt-6 px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+          System
         </p>
-        <ul className="space-y-0.5" role="list">
+        <ul className="space-y-1" role="list">
           {BOTTOM_NAV.map(({ label, href, icon: Icon }) => {
-            const isActive = pathname === href || pathname.startsWith(`${href}/`);
+            const isActive = pathname === href;
             return (
-              <li key={href} className="relative">
+              <li key={href}>
                 <Link
                   href={href}
                   aria-current={isActive ? "page" : undefined}
                   className={cn(
-                    "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-150",
+                    "flex items-center gap-3 rounded-xl px-3.5 py-2 text-sm font-medium transition-colors",
                     isActive
-                      ? "bg-amber-400/10 text-amber-400"
-                      : "text-muted-foreground hover:bg-white/[0.04] hover:text-foreground"
+                      ? "bg-slate-800 text-white font-semibold"
+                      : "text-slate-400 hover:bg-slate-800/60 hover:text-slate-200"
                   )}
                 >
-                  {isActive && (
-                    <motion.div
-                      layoutId="sidebar-active-pill"
-                      className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-amber-400"
-                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                    />
-                  )}
                   <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-                  {label}
+                  <span>{label}</span>
                 </Link>
               </li>
             );
@@ -127,32 +110,18 @@ export function Sidebar() {
         </ul>
       </nav>
 
-      {/* User profile footer */}
-      <div className="border-t border-white/[0.06] p-3 space-y-2">
-        {/* System status */}
-        <div className="flex items-center gap-2 rounded-xl bg-green-500/8 px-3 py-2">
-          <span className="dot-online" aria-hidden="true" />
-          <span className="text-xs font-medium text-green-400">All Systems Operational</span>
-        </div>
-
-        {/* User mini-card */}
-        <Link href="/settings/profile"
-          className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 transition-colors hover:bg-white/[0.04]"
-          aria-label="Go to profile"
-        >
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-amber-400/25 bg-amber-400/10 text-xs font-bold text-amber-400">
+      {/* User Footer Card */}
+      <div className="border-t border-slate-800 p-3">
+        <div className="flex items-center gap-3 rounded-xl bg-slate-900/90 p-2.5 border border-slate-800">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/20 text-amber-400 text-xs font-black ring-1 ring-amber-500/30">
             {initials}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-semibold text-foreground">{MOCK_USER.name}</p>
-            <p className="truncate text-[10px] text-muted-foreground">{MOCK_USER.role}</p>
+            <p className="truncate text-xs font-bold text-white">{MOCK_USER.name}</p>
+            <p className="truncate text-[10px] text-slate-400">{MOCK_USER.role}</p>
           </div>
-          <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-amber-400/10">
-            <Shield className="h-2.5 w-2.5 text-amber-400" aria-hidden="true" />
-          </div>
-        </Link>
-
-        <p className="text-center text-[10px] text-muted-foreground/40">v0.1.0 · OSHA Compliant</p>
+          <Shield className="h-4 w-4 text-emerald-400 shrink-0" />
+        </div>
       </div>
     </aside>
   );

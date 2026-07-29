@@ -2,109 +2,59 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { MapPin } from "lucide-react";
 
-interface IncidentHeatmapProps {
-  data: number[][];
-}
+const DEMO_ZONES = [
+  { id: "ZONE-A", name: "Welding Zone B", status: "HIGH RISK", riskColor: "bg-orange-500", workers: 14, temp: "42°C", hazard: "Thermal Anomaly" },
+  { id: "ZONE-B", name: "Chemical Bay 4", status: "CRITICAL",  riskColor: "bg-red-600",    workers: 8,  temp: "28°C", hazard: "Pressure Leak" },
+  { id: "ZONE-C", name: "Machine Area C", status: "MODERATE", riskColor: "bg-amber-500",  workers: 22, temp: "31°C", hazard: "Vibration" },
+  { id: "ZONE-D", name: "Assembly Line 1", status: "NORMAL",   riskColor: "bg-emerald-600",workers: 35, temp: "24°C", hazard: "None" },
+];
 
-const DAYS  = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-const HOURS = Array.from({ length: 24 }, (_, i) => i);
-const HOURS_DISPLAY = HOURS.filter((h) => h % 4 === 0);
-
-function getColor(value: number, max: number): string {
-  if (value === 0) return "hsl(220 22% 10%)";
-  const t = value / max;
-  if (t < 0.2) return "hsl(217 91% 60% / 0.25)";
-  if (t < 0.4) return "hsl(217 91% 60% / 0.55)";
-  if (t < 0.6) return "hsl(43 96% 56% / 0.65)";
-  if (t < 0.8) return "hsl(25 95% 53% / 0.80)";
-  return "hsl(0 84% 52% / 0.90)";
-}
-
-export function IncidentHeatmap({ data }: IncidentHeatmapProps) {
-  const [tooltip, setTooltip] = useState<{ day: string; hour: number; value: number } | null>(null);
-  const max = Math.max(...data.flat());
+export function IncidentHeatmap() {
+  const [selectedZone, setSelectedZone] = useState(DEMO_ZONES[0]);
 
   return (
-    <div className="rounded-2xl border border-white/[0.06] bg-card p-5">
-      {/* Header */}
-      <div className="mb-4 flex items-start justify-between">
-        <div>
-          <h2 className="text-sm font-bold text-foreground">Incident Heatmap</h2>
-          <p className="text-[11px] text-muted-foreground">Incidents by day & hour (last 30 days)</p>
-        </div>
-        {tooltip && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="rounded-lg border border-white/10 bg-secondary/80 px-2.5 py-1.5 text-right backdrop-blur-sm"
-          >
-            <p className="text-xs font-semibold text-foreground">{tooltip.value} incident{tooltip.value !== 1 ? "s" : ""}</p>
-            <p className="text-[10px] text-muted-foreground">{tooltip.day}, {tooltip.hour.toString().padStart(2, "0")}:00</p>
-          </motion.div>
-        )}
-      </div>
-
-      {/* Hour axis labels */}
-      <div className="mb-1 flex">
-        <div className="w-8 shrink-0" />
-        <div className="relative flex-1">
-          {HOURS_DISPLAY.map((h) => (
-            <span
-              key={h}
-              className="absolute text-[9px] text-muted-foreground/60 -translate-x-1/2"
-              style={{ left: `${(h / 23) * 100}%` }}
+    <div className="p-4 space-y-4">
+      {/* Visual Plant Schematic Layout */}
+      <div className="relative h-[220px] w-full rounded-xl border border-slate-200 bg-slate-100 p-3 grid grid-cols-2 gap-3">
+        {DEMO_ZONES.map((zone) => {
+          const isSelected = selectedZone.id === zone.id;
+          return (
+            <div
+              key={zone.id}
+              onClick={() => setSelectedZone(zone)}
+              className={`relative rounded-xl border p-3 flex flex-col justify-between cursor-pointer transition-all ${
+                isSelected
+                  ? "bg-white border-amber-500 shadow-md ring-2 ring-amber-500/20"
+                  : "bg-white/80 border-slate-200 hover:bg-white hover:border-slate-300"
+              }`}
             >
-              {h.toString().padStart(2, "0")}h
-            </span>
-          ))}
-        </div>
-      </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-900">{zone.name}</span>
+                <span className={`rounded px-1.5 py-0.5 text-[9px] font-black text-white ${zone.riskColor}`}>
+                  {zone.status}
+                </span>
+              </div>
 
-      {/* Grid */}
-      <div className="mt-3 space-y-1">
-        {data.map((row, dayIdx) => (
-          <div key={DAYS[dayIdx]} className="flex items-center gap-1">
-            {/* Day label */}
-            <span className="w-7 shrink-0 text-[9px] font-medium text-muted-foreground/60">
-              {DAYS[dayIdx]}
-            </span>
-
-            {/* Cells */}
-            <div className="flex flex-1 gap-[2px]">
-              {row.map((val, hourIdx) => (
-                <motion.div
-                  key={hourIdx}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: (dayIdx * 24 + hourIdx) * 0.001 }}
-                  className="relative flex-1 cursor-pointer rounded-sm"
-                  style={{
-                    height: 18,
-                    backgroundColor: getColor(val, max),
-                    transition: "transform 0.15s ease, box-shadow 0.15s ease",
-                  }}
-                  onMouseEnter={() => setTooltip({ day: DAYS[dayIdx], hour: hourIdx, value: val })}
-                  onMouseLeave={() => setTooltip(null)}
-                  whileHover={{ scale: 1.2, zIndex: 10 }}
-                  aria-label={`${DAYS[dayIdx]} ${hourIdx}:00 — ${val} incidents`}
-                />
-              ))}
+              <div className="flex items-center justify-between text-[11px] text-slate-500 font-medium">
+                <span>{zone.workers} Workers</span>
+                <span className="font-mono">{zone.temp}</span>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
-      {/* Legend */}
-      <div className="mt-4 flex items-center justify-between">
-        <span className="text-[10px] text-muted-foreground/60">Less</span>
-        <div className="flex gap-1">
-          {["hsl(220 22% 10%)", "hsl(217 91% 60% / 0.3)", "hsl(43 96% 56% / 0.65)", "hsl(25 95% 53% / 0.80)", "hsl(0 84% 52% / 0.90)"].map((c, i) => (
-            <div key={i} className="h-3 w-5 rounded-sm" style={{ backgroundColor: c }} />
-          ))}
+      {/* Selected Zone Quick Telemetry Banner */}
+      <div className="rounded-xl border border-slate-200 bg-white p-3 flex items-center justify-between text-xs">
+        <div className="flex items-center gap-2">
+          <MapPin className="h-4 w-4 text-amber-500" />
+          <span className="font-bold text-slate-900">{selectedZone.name}</span>
+          <span className="text-slate-400">•</span>
+          <span className="text-slate-600 font-medium">Hazard: <strong className="text-slate-900">{selectedZone.hazard}</strong></span>
         </div>
-        <span className="text-[10px] text-muted-foreground/60">More</span>
+        <span className="font-bold text-blue-600">Telemetry Syncing Live</span>
       </div>
     </div>
   );

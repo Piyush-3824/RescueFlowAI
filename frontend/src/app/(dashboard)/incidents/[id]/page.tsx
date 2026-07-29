@@ -1,279 +1,299 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import React, { useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { useParams } from "next/navigation";
 import {
-  ArrowLeft, MapPin, User, Clock, Shield, Cpu, Phone, Users2,
-  AlertTriangle, CheckCircle2, Radio, ChevronRight, Brain,
-  FileText, Zap, Download,
+  ArrowLeft, MapPin, User, Clock, Shield, Brain, Phone, Users,
+  AlertTriangle, CheckCircle2, Radio, ChevronRight, FileText,
+  Volume2, Video, Camera, Calendar, Building2, Check
 } from "lucide-react";
-import { MOCK_INCIDENTS, type IncidentSeverity, type IncidentStatus } from "@/lib/mock-data";
+import { MOCK_INCIDENTS } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
-import { RingProgress } from "@/components/ui/ring-progress";
 
-const SEV_STYLES: Record<IncidentSeverity, {
-  badge: string; headerBg: string; headerBorder: string; glow: string; bannerBg: string; bannerText: string;
-}> = {
-  critical: {
-    badge: "bg-red-500/15 text-red-400 border-red-500/30",
-    headerBg: "bg-gradient-to-r from-red-500/8 to-transparent",
-    headerBorder: "border-red-500/25",
-    glow: "glow-red",
-    bannerBg: "bg-red-500",
-    bannerText: "CRITICAL — IMMEDIATE ACTION REQUIRED",
-  },
-  high: {
-    badge: "bg-orange-500/15 text-orange-400 border-orange-500/30",
-    headerBg: "bg-gradient-to-r from-orange-500/8 to-transparent",
-    headerBorder: "border-orange-500/25",
-    glow: "glow-orange",
-    bannerBg: "bg-orange-500",
-    bannerText: "HIGH PRIORITY — RESPONSE DISPATCHED",
-  },
-  moderate: {
-    badge: "bg-amber-500/15 text-amber-400 border-amber-500/30",
-    headerBg: "bg-gradient-to-r from-amber-500/8 to-transparent",
-    headerBorder: "border-amber-500/25",
-    glow: "glow-yellow",
-    bannerBg: "bg-amber-500",
-    bannerText: "MODERATE — ACTION REQUIRED",
-  },
-  low: {
-    badge: "bg-green-500/15 text-green-400 border-green-500/30",
-    headerBg: "bg-gradient-to-r from-green-500/8 to-transparent",
-    headerBorder: "border-green-500/25",
-    glow: "glow-green",
-    bannerBg: "bg-green-600",
-    bannerText: "LOW SEVERITY — ROUTINE HANDLING",
-  },
-};
-
-const STATUS_CONFIG: Record<IncidentStatus, { label: string; color: string; dot: string }> = {
-  active:     { label: "Active",     color: "text-red-400    bg-red-500/10    border-red-500/20",    dot: "bg-red-500"    },
-  dispatched: { label: "Dispatched", color: "text-amber-400  bg-amber-500/10  border-amber-500/20",  dot: "bg-amber-500"  },
-  resolved:   { label: "Resolved",   color: "text-green-400  bg-green-500/10  border-green-500/20",  dot: "bg-green-500"  },
-  pending:    { label: "Pending",    color: "text-blue-400   bg-blue-500/10   border-blue-500/20",   dot: "bg-blue-500"   },
-};
-
-const TIMELINE_EVENTS = [
-  { time: "08:12", label: "Incident Reported",       icon: AlertTriangle, color: "text-red-400 bg-red-400/10",      borderColor: "border-red-500/30"    },
-  { time: "08:14", label: "AI Analysis Complete",    icon: Cpu,           color: "text-blue-400 bg-blue-400/10",    borderColor: "border-blue-500/30"   },
-  { time: "08:16", label: "Teams Notified",          icon: Phone,         color: "text-amber-400 bg-amber-400/10",  borderColor: "border-amber-500/30"  },
-  { time: "08:18", label: "Responders Dispatched",   icon: Radio,         color: "text-orange-400 bg-orange-400/10",borderColor: "border-orange-500/30" },
-  { time: "08:45", label: "Teams On-Site",           icon: Users2,        color: "text-purple-400 bg-purple-400/10",borderColor: "border-purple-500/30" },
+const LIFECYCLE_STEPS = [
+  { id: 1, title: "Reported" },
+  { id: 2, title: "AI Analysed" },
+  { id: 3, title: "Assigned" },
+  { id: 4, title: "In Progress" },
+  { id: 5, title: "Resolved" },
 ];
 
 export default function IncidentDetailPage() {
-  const params   = useParams();
-  const id       = params["id"] as string;
-  const incident = MOCK_INCIDENTS.find((i) => i.id === id) ?? MOCK_INCIDENTS[0]!;
-  const sev      = SEV_STYLES[incident.severity];
-  const stat     = STATUS_CONFIG[incident.status];
+  const params = useParams();
+  const incidentId = (params?.["id"] as string) ?? "INC-2024-001";
+  const incident = MOCK_INCIDENTS.find((i) => i.id === incidentId) ?? MOCK_INCIDENTS[0];
+  const [currentStep, setCurrentStep] = useState(4); // "In Progress"
 
   return (
-    <div className="space-y-5">
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Link href="/incidents" className="flex items-center gap-1.5 hover:text-foreground transition-colors">
-          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          Incidents
-        </Link>
-        <ChevronRight className="h-4 w-4 opacity-40" aria-hidden="true" />
-        <span className="font-mono-id text-foreground">{incident.id}</span>
-      </div>
-
-      {/* Severity banner strip */}
-      <div className={cn("flex items-center gap-3 rounded-xl px-4 py-2.5", sev.bannerBg)}>
-        <div className="osha-stripe h-4 w-8 rounded" />
-        <span className="text-xs font-black tracking-widest text-white">{sev.bannerText}</span>
-        <div className="ml-auto osha-stripe h-4 w-8 rounded" />
-      </div>
-
-      {/* Header card */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
-        className={cn("relative overflow-hidden rounded-2xl border p-6", sev.headerBorder, sev.headerBg)}>
-        <div className="pointer-events-none absolute inset-0 grid-pattern opacity-10" aria-hidden="true" />
-        <div className="relative flex flex-wrap items-start justify-between gap-4">
-          <div className="flex-1">
-            <div className="mb-3 flex flex-wrap items-center gap-2">
-              <span className={cn("rounded-lg border px-2.5 py-1 text-[11px] font-black uppercase tracking-wider", sev.badge)}>
+    <div className="space-y-6 pb-10">
+      {/* Top Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Link
+            href="/incidents"
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Link>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-xs font-bold text-slate-400">{incident.id}</span>
+              <span className="rounded-md bg-red-600 px-2 py-0.5 text-[10px] font-black uppercase text-white">
                 {incident.severity}
               </span>
-              <span className={cn("flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-semibold capitalize", stat.color)}>
-                <span className={cn("h-1.5 w-1.5 rounded-full", stat.dot, incident.status === "active" && "animate-pulse")} aria-hidden="true" />
-                {stat.label}
-              </span>
-              <span className="font-mono-id text-xs text-muted-foreground">{incident.id}</span>
             </div>
-            <h1 className="text-2xl font-black text-foreground">{incident.title}</h1>
-            <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-              <span className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" aria-hidden="true" />{incident.location}</span>
-              <span className="flex items-center gap-1.5"><User className="h-3.5 w-3.5" aria-hidden="true" />{incident.reportedBy}</span>
-              <span className="flex items-center gap-1.5">
-                <Clock className="h-3.5 w-3.5" aria-hidden="true" />
-                {new Date(incident.reportedAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}
-              </span>
-            </div>
-          </div>
-
-          {/* Safety score ring */}
-          <div className="flex flex-col items-center gap-1">
-            <RingProgress
-              value={incident.safetyScore}
-              size={72}
-              strokeWidth={6}
-              label={
-                <span className={cn("text-base font-black",
-                  incident.safetyScore >= 85 ? "text-green-400" :
-                  incident.safetyScore >= 70 ? "text-amber-400" : "text-red-400"
-                )}>
-                  {incident.safetyScore}
-                </span>
-              }
-            />
-            <p className="text-[10px] text-muted-foreground">Safety Score</p>
+            <h1 className="text-xl font-extrabold text-slate-900">{incident.title}</h1>
           </div>
         </div>
 
-        {/* Action buttons */}
-        <div className="relative mt-5 flex flex-wrap gap-2 border-t border-white/[0.06] pt-4">
-          {[
-            { label: "Mark Resolved",    icon: CheckCircle2, style: "bg-green-500/10 text-green-400 hover:bg-green-500/15 border-green-500/20" },
-            { label: "Dispatch Units",   icon: Radio,        style: "bg-amber-400/10 text-amber-400 hover:bg-amber-400/15 border-amber-400/20" },
-            { label: "OSHA Report",      icon: FileText,     style: "bg-blue-500/10 text-blue-400 hover:bg-blue-500/15 border-blue-500/20"   },
-            { label: "Export",           icon: Download,     style: "bg-secondary/40 text-muted-foreground hover:text-foreground border-white/[0.06]" },
-          ].map(({ label, icon: Icon, style }) => (
-            <button key={label} className={cn("flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold transition-all", style)}>
-              <Icon className="h-3.5 w-3.5" aria-hidden="true" />
-              {label}
-            </button>
-          ))}
+        <div className="flex items-center gap-2">
+          <Link
+            href="/dispatch"
+            className="flex items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-slate-950 hover:bg-amber-400 transition-all shadow-xs"
+          >
+            <Radio className="h-3.5 w-3.5" />
+            <span>Manage Response</span>
+          </Link>
         </div>
-      </motion.div>
+      </div>
 
-      <div className="grid gap-5 lg:grid-cols-3">
-        {/* Left: description + AI + responders */}
-        <div className="space-y-5 lg:col-span-2">
+      {/* Clean Two-Column Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        {/* =================================================================== */}
+        {/* LEFT COLUMN (7 Cols): Uploaded Evidence & AI Analysis              */}
+        {/* =================================================================== */}
+        <div className="lg:col-span-7 space-y-6">
+          
+          {/* Uploaded Evidence Card */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-4">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-2">
+              Uploaded Evidence
+            </h3>
 
-          {/* Description */}
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-            className="rounded-2xl border border-white/[0.06] bg-card p-5">
-            <div className="mb-3 flex items-center gap-2">
-              <FileText className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-              <h2 className="text-sm font-bold text-foreground">Incident Description</h2>
-            </div>
-            <p className="text-sm leading-relaxed text-muted-foreground">{incident.description}</p>
-          </motion.div>
-
-          {/* AI Analysis */}
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
-            className="relative overflow-hidden rounded-2xl border border-blue-500/20 bg-gradient-to-br from-blue-500/5 to-purple-500/5 p-5">
-            <div className="pointer-events-none absolute right-0 top-0 h-32 w-32 rounded-full bg-blue-400/5 blur-2xl" aria-hidden="true" />
-            <div className="relative mb-3 flex items-center gap-2.5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-400/20 to-purple-400/10">
-                <Brain className="h-4 w-4 text-blue-400" aria-hidden="true" />
-              </div>
-              <div>
-                <h2 className="text-sm font-bold text-foreground">AI Analysis</h2>
-                <p className="text-[10px] text-muted-foreground">Gemini AI · Analyzed in 2.1s · 94% confidence</p>
-              </div>
-              <div className="ml-auto flex items-center gap-1.5 rounded-full bg-blue-500/10 px-2.5 py-1">
-                <span className="h-1.5 w-1.5 rounded-full bg-blue-400 animate-pulse" aria-hidden="true" />
-                <span className="text-[10px] font-semibold text-blue-400">Auto-Generated</span>
-              </div>
-            </div>
-            <p className="relative text-sm leading-relaxed text-muted-foreground">{incident.aiSummary}</p>
-
-            {/* AI recommendation tags */}
-            <div className="relative mt-3 flex flex-wrap gap-1.5">
-              {["Immediate Response", "PPE Required", "OSHA Recordable", "HazMat Protocol"].map((tag) => (
-                <span key={tag} className="rounded-full border border-blue-500/20 bg-blue-500/8 px-2.5 py-0.5 text-[10px] font-semibold text-blue-400">
-                  {tag}
-                </span>
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Responders */}
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-            className="rounded-2xl border border-white/[0.06] bg-card p-5">
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-sm font-bold text-foreground">Assigned Responders</h2>
-              <span className="rounded-full bg-amber-400/10 px-2.5 py-0.5 text-[10px] font-semibold text-amber-400">
-                {incident.responders.length} assigned
-              </span>
-            </div>
-            <div className="space-y-2">
-              {incident.responders.map((r, i) => (
-                <div key={r} className="flex items-center gap-3 rounded-xl border border-white/[0.05] bg-secondary/20 px-3 py-2.5 transition-colors hover:bg-secondary/40">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full border border-amber-400/20 bg-amber-400/10 text-xs font-bold text-amber-400">
-                    {r.split(" ").slice(0, 2).map((w) => w[0]).join("")}
+            <div className="space-y-4">
+              {/* Media Preview (Photo / Video) */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-center space-y-2">
+                  <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg bg-white border border-slate-200 text-amber-500 shadow-xs">
+                    <Camera className="h-5 w-5" />
                   </div>
-                  <span className="flex-1 text-sm font-medium text-foreground">{r}</span>
-                  <span className={cn("flex items-center gap-1 text-xs font-semibold",
-                    i === 0 ? "text-green-400" : "text-amber-400"
-                  )}>
-                    <span className={cn("h-1.5 w-1.5 rounded-full", i === 0 ? "bg-green-400" : "bg-amber-400 animate-pulse")} aria-hidden="true" />
-                    {i === 0 ? "On-site" : "En route"}
+                  <p className="text-xs font-bold text-slate-800">Photo Evidence</p>
+                  <p className="text-[10px] text-slate-500">site_capture_00912.jpg (3.4 MB)</p>
+                </div>
+
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-center space-y-2">
+                  <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg bg-white border border-slate-200 text-blue-600 shadow-xs">
+                    <Video className="h-5 w-5" />
+                  </div>
+                  <p className="text-xs font-bold text-slate-800">Video Evidence</p>
+                  <p className="text-[10px] text-slate-500">clip_zone_b.mp4 (14.2 MB)</p>
+                </div>
+              </div>
+
+              {/* Voice Transcript */}
+              <div className="rounded-xl bg-slate-50 border border-slate-200 p-3.5 space-y-1.5">
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
+                  <Volume2 className="h-4 w-4 text-amber-500" />
+                  <span>Voice Transcript</span>
+                </div>
+                <p className="text-xs text-slate-600 italic">
+                  &ldquo;Heavy smoke detected near welding rig B. Combustible chemical canisters located within 3 meters.&rdquo;
+                </p>
+              </div>
+
+              {/* Reporter Description */}
+              <div className="space-y-1">
+                <span className="text-xs font-bold text-slate-700 block">Reporter Description</span>
+                <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-200">
+                  {incident.description}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* AI Analysis Card */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+              <div className="flex items-center gap-2">
+                <Brain className="h-4 w-4 text-blue-600" />
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900">Gemini AI Analysis</h3>
+              </div>
+              <span className="text-xs font-bold text-blue-600">94% Confidence</span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div className="rounded-xl bg-slate-50 p-3 border border-slate-100">
+                <span className="text-slate-500 block font-medium">Incident Type</span>
+                <span className="font-bold text-slate-900">{incident.type}</span>
+              </div>
+              <div className="rounded-xl bg-slate-50 p-3 border border-slate-100">
+                <span className="text-slate-500 block font-medium">Severity</span>
+                <span className="font-bold text-red-600">{incident.severity}</span>
+              </div>
+            </div>
+
+            {/* AI Summary */}
+            <div className="rounded-xl bg-blue-50/70 border border-blue-200/70 p-3.5 space-y-1">
+              <span className="text-xs font-bold text-blue-900 block">AI Summary</span>
+              <p className="text-xs text-blue-950 leading-relaxed">
+                Critical thermal anomaly and chemical hazard identified. High probability of secondary pressure reaction if containment is delayed.
+              </p>
+            </div>
+
+            {/* Hazards & Workers at Risk */}
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div className="space-y-1.5">
+                <span className="font-bold text-slate-700 block">Identified Hazards</span>
+                <ul className="space-y-1 text-slate-600">
+                  <li className="flex items-center gap-1.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                    Open Flame &amp; Thermal Risk
+                  </li>
+                  <li className="flex items-center gap-1.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-orange-500" />
+                    Vapor Dispersion
+                  </li>
+                </ul>
+              </div>
+
+              <div className="space-y-1.5">
+                <span className="font-bold text-slate-700 block">Workers at Risk</span>
+                <div className="rounded-xl bg-orange-50 border border-orange-200 p-2.5 text-center">
+                  <span className="text-base font-extrabold text-orange-700">3 Workers</span>
+                  <span className="block text-[10px] text-orange-600">Immediate Evacuation Needed</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        {/* =================================================================== */}
+        {/* RIGHT COLUMN (5 Cols): Response Status & Incident Information       */}
+        {/* =================================================================== */}
+        <div className="lg:col-span-5 space-y-6">
+          
+          {/* Response Status Card */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-4">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-2">
+              Response Status
+            </h3>
+
+            {/* Assigned Teams */}
+            <div className="space-y-2">
+              <span className="text-xs font-bold text-slate-700 block">Assigned Teams</span>
+              <div className="space-y-1.5">
+                {["Safety Officer", "Fire Safety Team", "Supervisor"].map((team) => (
+                  <div key={team} className="flex items-center justify-between rounded-xl bg-slate-50 p-2.5 border border-slate-200/80 text-xs font-semibold text-slate-800">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-3.5 w-3.5 text-amber-500" />
+                      <span>{team}</span>
+                    </div>
+                    <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                      Dispatched
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Voice Alert & Notification Status */}
+            <div className="grid grid-cols-2 gap-3 text-xs pt-1">
+              <div className="rounded-xl bg-slate-50 p-3 border border-slate-200/80">
+                <span className="text-slate-500 block font-medium text-[10px]">Voice Alert</span>
+                <span className="font-bold text-emerald-600">Broadcast Sent</span>
+              </div>
+              <div className="rounded-xl bg-slate-50 p-3 border border-slate-200/80">
+                <span className="text-slate-500 block font-medium text-[10px]">Notifications</span>
+                <span className="font-bold text-blue-600">SMS &amp; Push Active</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Incident Information Card */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-3 text-xs">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-2">
+              Incident Information
+            </h3>
+
+            <div className="space-y-2 text-slate-700 font-medium">
+              <div className="flex justify-between py-1 border-b border-slate-100">
+                <span className="text-slate-500">Site</span>
+                <span className="font-bold text-slate-900">Manufacturing Plant 01</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-slate-100">
+                <span className="text-slate-500">Department</span>
+                <span className="font-bold text-slate-900">{incident.department}</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-slate-100">
+                <span className="text-slate-500">Location</span>
+                <span className="font-bold text-slate-900">{incident.location}</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-slate-100">
+                <span className="text-slate-500">Date</span>
+                <span className="font-bold text-slate-900">Jul 29, 2026</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-slate-100">
+                <span className="text-slate-500">Time</span>
+                <span className="font-bold text-slate-900">12:05 PM</span>
+              </div>
+              <div className="flex justify-between py-1">
+                <span className="text-slate-500">Reporter</span>
+                <span className="font-bold text-slate-900">{incident.reportedBy}</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* BOTTOM: Visual Incident Lifecycle */}
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs space-y-4">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Incident Lifecycle</h3>
+        
+        <div className="flex items-center justify-between">
+          {LIFECYCLE_STEPS.map((s, idx) => {
+            const isDone = currentStep > s.id;
+            const isCurrent = currentStep === s.id;
+            return (
+              <React.Fragment key={s.id}>
+                <div className="flex flex-col items-center gap-2">
+                  <div
+                    className={cn(
+                      "flex h-9 w-9 items-center justify-center rounded-full text-xs font-extrabold transition-all",
+                      isDone
+                        ? "bg-emerald-600 text-white"
+                        : isCurrent
+                        ? "bg-amber-500 text-slate-950 ring-4 ring-amber-100"
+                        : "bg-slate-100 text-slate-400 border border-slate-200"
+                    )}
+                  >
+                    {isDone ? <Check className="h-4 w-4 stroke-[3]" /> : s.id}
+                  </div>
+                  <span
+                    className={cn(
+                      "text-xs font-bold",
+                      isDone ? "text-emerald-700" : isCurrent ? "text-amber-600" : "text-slate-400"
+                    )}
+                  >
+                    {s.title}
                   </span>
                 </div>
-              ))}
-            </div>
-          </motion.div>
-        </div>
 
-        {/* Right: timeline + quick info */}
-        <div className="space-y-5">
-          {/* Response timeline */}
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
-            className="rounded-2xl border border-white/[0.06] bg-card p-5">
-            <h2 className="mb-4 text-sm font-bold text-foreground">Response Timeline</h2>
-            <ol className="relative space-y-4 pl-6">
-              {/* Vertical line */}
-              <div className="absolute left-[9px] top-2 bottom-2 w-px bg-gradient-to-b from-red-500/50 via-amber-500/30 to-transparent" aria-hidden="true" />
-
-              {TIMELINE_EVENTS.map(({ time, label, icon: Icon, color, borderColor }, idx) => (
-                <motion.li
-                  key={idx}
-                  initial={{ opacity: 0, x: -8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.3 + idx * 0.08 }}
-                  className="relative"
-                >
-                  <div className={cn(
-                    "absolute -left-[22px] flex h-5 w-5 items-center justify-center rounded-full border bg-card",
-                    borderColor
-                  )}>
-                    <Icon className={cn("h-2.5 w-2.5", color.split(" ")[0])} aria-hidden="true" />
-                  </div>
-                  <p className="text-xs font-semibold text-foreground">{label}</p>
-                  <p className="text-[10px] text-muted-foreground">{time} · Today</p>
-                </motion.li>
-              ))}
-            </ol>
-          </motion.div>
-
-          {/* Quick info card */}
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-            className="rounded-2xl border border-white/[0.06] bg-card p-5">
-            <h2 className="mb-3 text-sm font-bold text-foreground">Incident Details</h2>
-            <div className="space-y-2">
-              {[
-                { label: "Type",       value: incident.type.replace("-", " "), icon: AlertTriangle },
-                { label: "Department", value: incident.department,              icon: Shield        },
-                { label: "Reporter",   value: incident.reportedBy,              icon: User          },
-                { label: "Reported",   value: new Date(incident.reportedAt).toLocaleDateString("en-IN"), icon: Clock },
-                { label: "Resolved",   value: incident.resolvedAt ? new Date(incident.resolvedAt).toLocaleDateString("en-IN") : "Pending", icon: CheckCircle2 },
-              ].map(({ label, value, icon: Icon }) => (
-                <div key={label} className="flex items-center gap-2.5 rounded-lg bg-secondary/20 px-3 py-2">
-                  <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
-                  <span className="text-xs text-muted-foreground">{label}</span>
-                  <span className="ml-auto text-right text-xs font-semibold capitalize text-foreground">{value}</span>
-                </div>
-              ))}
-            </div>
-          </motion.div>
+                {idx < LIFECYCLE_STEPS.length - 1 && (
+                  <div
+                    className={cn(
+                      "h-1 flex-1 mx-3 rounded-full transition-all",
+                      currentStep > idx + 1 ? "bg-emerald-500" : "bg-slate-100"
+                    )}
+                  />
+                )}
+              </React.Fragment>
+            );
+          })}
         </div>
       </div>
     </div>
