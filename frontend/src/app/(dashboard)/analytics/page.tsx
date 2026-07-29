@@ -80,7 +80,7 @@ export default function AnalyticsPage() {
             <span className="text-xs font-semibold text-slate-400">By Classification</span>
           </div>
           <DonutChart
-            segments={[
+            data={[
               { label: "Chemical Spills", value: 35, color: "#DC2626" },
               { label: "Equipment Faults", value: 40, color: "#F97316" },
               { label: "Fire / Thermal",   value: 25, color: "#F59E0B" },
@@ -125,7 +125,7 @@ export default function AnalyticsPage() {
           </div>
 
           <DonutChart
-            segments={[
+            data={[
               { label: "Critical Risk",  value: 12, color: "#DC2626" },
               { label: "High Risk",      value: 28, color: "#F97316" },
               { label: "Moderate Risk",  value: 54, color: "#F59E0B" },
