@@ -11,6 +11,12 @@
     <img src="https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase" />
     <img src="https://img.shields.io/badge/Gemini_AI-4285F4?style=for-the-badge&logo=google&logoColor=white" alt="Gemini" />
   </p>
+
+  <p>
+    <a href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FPiyush-3824%2FRescueFlowAI&env=GEMINI_API_KEY,NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY&root-directory=frontend">
+      <img src="https://vercel.com/button" alt="Deploy with Vercel"/>
+    </a>
+  </p>
 </div>
 
 ---
@@ -71,7 +77,17 @@ RescueFlow AI provides an intelligent platform capable of analyzing incidents su
 
 ## 🚀 Getting Started
 
-### 1. Clone the Repository
+### ⚡ 1-Click Deploy to Vercel
+
+The easiest way to deploy RescueFlow AI is using the Vercel deploy button. It will automatically set the correct root directory and prompt you for the required environment variables:
+
+1. Click the **Deploy with Vercel** button at the top of this README.
+2. When prompted, enter your `GEMINI_API_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+3. Vercel will build and deploy the application automatically.
+
+### 💻 Local Setup
+
+#### 1. Clone the Repository
 ```bash
 git clone https://github.com/Piyush-3824/RescueFlowAI.git
 cd RescueFlowAI
