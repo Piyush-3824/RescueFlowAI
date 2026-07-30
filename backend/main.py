@@ -27,9 +27,9 @@ from app.core.exceptions import (
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Initialise resources on startup; clean up on shutdown."""
     # TODO: initialise DB connection pool, warm AI models, etc.
-    print(f"[{settings.APP_NAME}] 🚀 Starting up (env={settings.APP_ENV})")
+    print(f"[{settings.APP_NAME}] Starting up (env={settings.APP_ENV})")
     yield
-    print(f"[{settings.APP_NAME}] 🛑 Shutting down")
+    print(f"[{settings.APP_NAME}] Shutting down")
 
 
 # ──────────────────────────────────────────────────────────────────────────────
