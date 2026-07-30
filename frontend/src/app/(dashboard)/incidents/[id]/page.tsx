@@ -101,7 +101,7 @@ export default function IncidentDetailPage() {
   const isAudio    = mediaMime.startsWith("audio/");
 
   function handleDownload() {
-    if (!incident.mediaBlob) return;
+    if (!incident || !incident.mediaBlob) return;
     const ext  = mediaMime.split("/")[1] || "bin";
     downloadBlob(incident.mediaBlob, `evidence_${incident.id}.${ext}`);
   }
