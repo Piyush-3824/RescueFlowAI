@@ -2,6 +2,7 @@ import { createBrowserClient } from "@supabase/ssr";
 
 /**
  * Returns a singleton Supabase browser client.
+ * Returns null when Supabase is not configured (demo / local dev mode).
  * Safe to call multiple times – only one instance is created per page load.
  */
 export function createSupabaseBrowserClient() {
@@ -9,9 +10,8 @@ export function createSupabaseBrowserClient() {
   const supabaseAnonKey = process.env["NEXT_PUBLIC_SUPABASE_ANON_KEY"];
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error(
-      "[Supabase] NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be set."
-    );
+    // Demo mode: Supabase not configured — return null
+    return null;
   }
 
   return createBrowserClient(supabaseUrl, supabaseAnonKey);

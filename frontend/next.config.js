@@ -1,8 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Enable typed routes (Next.js 16+)
-  typedRoutes: true,
-
+  // Experimental features
+  experimental: {
+    typedRoutes: true,
+  },
 
   // Image optimisation – add domains as services are integrated
   images: {

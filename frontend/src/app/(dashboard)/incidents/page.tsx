@@ -267,7 +267,7 @@ export default function IncidentsPage() {
 
                 {/* AI Summary if available */}
                 {inc.aiSummary && inc.aiSummary !== inc.description && (
-                  <p className="text-xs text-blue-300 bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-2 mt-2 line-clamp-2 italic border ">
+                  <p className="text-xs text-blue-300 bg-blue-500/10 border border-blue-500/20 rounded-lg px-3 py-2 mt-2 line-clamp-2 italic">
                     &ldquo;{inc.aiSummary}&rdquo;
                   </p>
                 )}

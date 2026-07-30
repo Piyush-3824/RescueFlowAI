@@ -2,12 +2,11 @@
 
 import React from "react";
 import {
-  TrendingUp, BarChart2, ShieldCheck, Timer, Award, Calendar, Download,
+  ShieldCheck, Timer, Download,
   AlertTriangle, MapPin, CheckCircle2
 } from "lucide-react";
 import { DonutChart } from "@/components/ui/donut-chart";
 import { LineChart } from "@/components/ui/line-chart";
-import { MOCK_STATS, MOCK_ANALYTICS_MONTHLY } from "@/lib/mock-data";
 
 const HIGH_RISK_AREAS = [
   { area: "Welding Zone B", risk: "CRITICAL", incidents: 5, department: "Welding", trend: "+12%" },

@@ -42,11 +42,11 @@ export default function DispatchPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-2 text-xs font-semibold text-white/70">
-              <div className="bg-white/[0.04] border border-white/[0.08] p-2.5 rounded-xl border border-white/[0.08]">
+              <div className="bg-white/[0.04] border border-white/[0.08] p-2.5 rounded-xl">
                 <span className="text-[10px] text-white/30 block uppercase">Assigned Zone</span>
                 <span className="text-white/90">{t.zone}</span>
               </div>
-              <div className="bg-white/[0.04] border border-white/[0.08] p-2.5 rounded-xl border border-white/[0.08]">
+              <div className="bg-white/[0.04] border border-white/[0.08] p-2.5 rounded-xl">
                 <span className="text-[10px] text-white/30 block uppercase">Personnel</span>
                 <span className="text-white/90">{t.members} Responders</span>
               </div>

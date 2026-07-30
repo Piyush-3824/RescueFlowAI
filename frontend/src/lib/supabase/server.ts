@@ -5,18 +5,18 @@ import type { Database } from "@/types/database";
 /**
  * Creates a Supabase client for use in Server Components, Server Actions,
  * and Route Handlers. Reads/writes cookies via Next.js `cookies()`.
+ * Returns null when Supabase is not configured (demo / local dev mode).
  */
 export async function createSupabaseServerClient() {
-  const cookieStore = await cookies();
-
   const supabaseUrl = process.env["NEXT_PUBLIC_SUPABASE_URL"];
   const supabaseAnonKey = process.env["NEXT_PUBLIC_SUPABASE_ANON_KEY"];
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error(
-      "[Supabase] NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be set."
-    );
+    // Demo mode: Supabase not configured — return null
+    return null;
   }
+
+  const cookieStore = await cookies();
 
   return createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
     cookies: {
@@ -43,10 +43,11 @@ export async function createSupabaseServerClient() {
 
 /**
  * Convenience helper: get the authenticated user from a Server Component.
- * Returns null if not authenticated.
+ * Returns null if not authenticated or if Supabase is not configured.
  */
 export async function getServerUser() {
   const supabase = await createSupabaseServerClient();
+  if (!supabase) return null;
   const { data } = await supabase.auth.getUser();
   return data.user;
 }

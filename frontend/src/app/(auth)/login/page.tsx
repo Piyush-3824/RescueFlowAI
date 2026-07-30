@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Activity, ArrowRight, ShieldCheck, Lock, Mail } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Activity, Lock, Mail } from "lucide-react";
 
 export default function LoginPage() {
   const [email, setEmail]       = useState("safety.officer@plant.com");
