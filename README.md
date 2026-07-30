@@ -1,411 +1,120 @@
-# 🚨 RescueFlow AI
-
-> **From Incident Detection to Intelligent Emergency Response**
-
-RescueFlow AI is an AI-powered Emergency Response & Incident Management Platform designed to automate emergency reporting, incident analysis, responder notification, and live monitoring. The platform enables organizations to respond to accidents faster by leveraging Artificial Intelligence, real-time communication, and location intelligence.
-
----
-
-# 📖 Overview
-
-Every second matters during an emergency.
-
-Industries such as manufacturing, construction, mining, logistics, healthcare, educational institutions, and smart cities often experience delays in emergency response due to manual reporting processes.
-
-Traditional workflows require someone to:
-
-- Identify the incident
-- Call emergency services
-- Explain the situation
-- Share the location
-- Inform supervisors
-- Document the incident
-
-These manual steps consume valuable time, increasing the risk of injuries, fatalities, equipment damage, and operational downtime.
-
-RescueFlow AI streamlines this process by automatically understanding an incident and coordinating the response using AI.
+<div align="center">
+  <img src="fire.jpg" alt="RescueFlow AI Banner" width="100%" style="border-radius: 12px; max-height: 400px; object-fit: cover;" />
+  <br/>
+  <h1>🚨 RescueFlow AI</h1>
+  <p><strong>From Incident Detection to Intelligent Emergency Response</strong></p>
+  
+  <p>
+    <img src="https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js" alt="Next.js" />
+    <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
+    <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind" />
+    <img src="https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase" />
+    <img src="https://img.shields.io/badge/Gemini_AI-4285F4?style=for-the-badge&logo=google&logoColor=white" alt="Gemini" />
+  </p>
+</div>
 
 ---
 
-# 🎯 Problem Statement
+## 📖 Overview
 
-Emergency response systems today are largely reactive and depend heavily on manual communication.
+**Every second matters during an emergency.** 
+RescueFlow AI is an AI-powered Emergency Response & Incident Management Platform designed to automate emergency reporting, incident analysis, responder notification, and live monitoring. 
 
-Common challenges include:
-
-- Delayed incident reporting
-- Inaccurate or incomplete information
-- Difficulty determining severity
-- Slow emergency dispatch
-- Lack of centralized incident tracking
-- Poor communication between responders
-- Manual incident documentation
-
-These inefficiencies often lead to slower response times and increased operational risks.
+Traditional workflows are manual, slow, and prone to miscommunication. **RescueFlow AI** streamlines this process by automatically understanding an incident via multimodal input (Voice, Image, Text) and coordinating the response using advanced AI models.
 
 ---
 
-# 💡 Solution
+## 🎯 The Problem
 
-RescueFlow AI provides an intelligent platform capable of analyzing incidents submitted through multiple input formats.
-
-Users can report an emergency using:
-
-- 📷 Image
-- 🎥 Video
-- 🎤 Voice Recording
-- 📝 Text Description
-
-The AI instantly processes the input, identifies the incident, estimates its severity, captures the location, recommends appropriate emergency services, generates reports, and updates a live monitoring dashboard.
+Emergency response systems today are largely reactive and depend heavily on manual communication:
+- ❌ **Delayed reporting** due to panic or cumbersome processes.
+- ❌ **Incomplete information** leading to incorrect responder dispatch.
+- ❌ **Poor communication** between centralized dispatchers and on-ground units.
+- ❌ **Lack of geospatial awareness** in real-time.
 
 ---
 
-# ✨ Key Features
+## 💡 Our Solution
 
-## 🤖 AI Incident Detection
+RescueFlow AI provides an intelligent platform capable of analyzing incidents submitted through multiple input formats:
 
-Analyze uploaded images, videos, voice transcripts, or text descriptions using AI.
-
-Automatically identifies:
-
-- Fire
-- Road Accident
-- Construction Accident
-- Factory Accident
-- Electrical Hazard
-- Chemical Spill
-- Medical Emergency
-- Equipment Failure
-- Workplace Injury
-- Other emergency situations
+1. 🎙️ **Multimodal Reporting:** Users can report emergencies using voice, images, or text.
+2. 🧠 **AI Triage & Analysis:** Powered by Google Gemini and OpenAI Whisper, the system instantly identifies the incident type, estimates severity, and determines required units.
+3. 🗺️ **Live GIS Command Center:** Dispatchers view a real-time heatmap and track active responders.
+4. 🚑 **Automated Dispatch:** Instantly notifies the closest and most relevant responder units (Police, Fire, Medical).
 
 ---
 
-## 📊 Severity Assessment
+## ✨ Key Features
 
-AI estimates the seriousness of every incident.
-
-Severity Levels:
-
-- Low
-- Medium
-- High
-- Critical
-
-Each prediction includes a confidence score.
+- **🤖 AI Incident Detection:** Automatically identifies incident types (Fire, Medical, Industrial, etc.) from images and voice transcripts.
+- **📊 Severity Assessment:** Calculates a confidence score and severity level (Low, Moderate, High, Critical).
+- **📍 Intelligent Location Tracking:** Captures GPS coordinates, renders an interactive heatmap, and routes responders.
+- **📢 Smart Notification System:** Automated Twilio voice calls and SMS for rapid responder deployment.
+- **📈 Live Analytics Dashboard:** Track incident volume, severity distribution, and response times in real-time.
 
 ---
 
-## 📍 Intelligent Location Detection
+## 🛠 Technology Stack
 
-Automatically captures:
+### Frontend (Next.js 15 App Router)
+- **Framework:** Next.js, React 19, TypeScript
+- **Styling:** Tailwind CSS, Framer Motion, shadcn/ui
+- **Maps:** Maplibre GL
 
-- GPS Coordinates
-- User Location
-- Incident Address
-- Interactive Map View
-
----
-
-## 🚑 Emergency Response Recommendation
-
-Based on the detected emergency, RescueFlow AI recommends the most appropriate responders.
-
-Examples include:
-
-- Ambulance
-- Fire Department
-- Police
-- Factory Safety Team
-- Security Personnel
-- Disaster Response Teams
+### Database & Backend
+- **Database & Auth:** Supabase (PostgreSQL, RLS, Edge Auth)
+- **AI Integrations:** Google Gemini API, OpenAI Whisper
+- **Communications:** Twilio API (Voice & SMS)
 
 ---
 
-## 📢 Smart Notification System
+## 🚀 Getting Started
 
-Instantly notifies relevant personnel through:
-
-- SMS
-- Email
-- Push Notifications
-- Voice Calls
-
-Notification includes:
-
-- Incident type
-- Severity
-- Location
-- Timestamp
-- Brief AI summary
-
----
-
-## 📋 AI Incident Report Generation
-
-Automatically generates structured reports containing:
-
-- Incident ID
-- Date & Time
-- Incident Type
-- Severity
-- Location
-- AI Analysis
-- Recommended Response
-- Current Status
-
-Reports can be stored for auditing and compliance.
-
----
-
-## 📈 Live Monitoring Dashboard
-
-Track incidents in real time.
-
-Dashboard displays:
-
-- Active incidents
-- Resolved incidents
-- Severity distribution
-- Incident timeline
-- Response status
-- Incident location
-- Assigned responders
-
----
-
-# 👥 Target Users
-
-RescueFlow AI is designed for:
-
-- Manufacturing Industries
-- Construction Companies
-- Mining Operations
-- Warehouses
-- Logistics Companies
-- Educational Institutions
-- Hospitals
-- Corporate Campuses
-- Smart Cities
-- Government Agencies
-- Public Safety Organizations
-
----
-
-# 🔄 System Workflow
-
-```
-User Reports Incident
-        │
-        ▼
-Upload Image / Video / Voice / Text
-        │
-        ▼
-AI Analysis Engine
-        │
-        ├── Detect Incident
-        ├── Estimate Severity
-        ├── Generate Description
-        ├── Calculate Confidence
-        ▼
-Capture GPS Location
-        │
-        ▼
-Recommend Emergency Services
-        │
-        ▼
-Send Notifications
-        │
-        ▼
-Generate Incident Report
-        │
-        ▼
-Update Live Dashboard
-```
-
----
-
-# 🛠 Technology Stack
-
-## Frontend
-
-- Next.js
-- Framer Motion
-- Tailwind CSS
-- shadcn/ui
-
-
----
-
-## Backend
-
--Fast API (python)
-
----
-
-## AI
-
-- Google Gemini API
-- OpenAI Whisper API
-
-Capabilities:
-
-- Image Understanding
-- Text Analysis
-- Incident Classification
-- Severity Prediction
-- Response Recommendation
-
----
-
-## Database
-
-- Supabase PostgreSQL
-
----
-
-## APIs & Services
-
-- Google Maps API
-- OpenAI Whisper API
-
----
-
-# 📂 Project Structure
-
-```
-RescueFlow-AI
-│
-├── frontend
-│   ├── src
-│   ├── pages
-│   ├── components
-│   ├── hooks
-│   ├── services
-│   ├── assets
-│   └── utils
-│
-├── backend
-│   ├── api
-│   ├── controllers
-│   ├── routes
-│   ├── services
-│   ├── models
-│   ├── utils
-│   └── app.py
-│
-├── docs
-│
-├── README.md
-├── SPEC.md
-├── CLAUDE.md
-├── .env.example
-└── requirements.txt
-```
-
----
-
-# 🚀 Getting Started
-
-## Clone the Repository
-
+### 1. Clone the Repository
 ```bash
-git clone https://github.com/your-username/RescueFlow-AI.git
-
-cd RescueFlow-AI
+git clone https://github.com/Piyush-3824/RescueFlowAI.git
+cd RescueFlowAI
 ```
 
----
-
-## Frontend Setup
-
+### 2. Frontend Setup
 ```bash
 cd frontend
-
 npm install
-
 npm run dev
 ```
+The application will be running at `http://localhost:3000`.
 
-Frontend runs on:
-
+### 3. Environment Variables
+Create a `.env.local` in the `frontend` directory:
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+GEMINI_API_KEY=your_gemini_key
 ```
-http://localhost:5173
+
+*(Note: The system supports a mock-data fallback for local development if API keys are not provided).*
+
+---
+
+## 🔄 System Architecture
+
+```mermaid
+graph TD
+    A[Citizen App] -->|Voice/Image/Text| B(Frontend API Route)
+    B --> C{AI Engine Gemini/Whisper}
+    C -->|Incident Classified & Severity Scored| D[Supabase Database]
+    D --> E[Dispatcher Dashboard]
+    E -->|Approve/Auto-Dispatch| F[Responder Notifications]
+    F --> G[Live GIS Tracking]
 ```
 
 ---
 
-## Backend Setup
-
-```bash
-cd backend
-
-pip install -r requirements.txt
-
-python app.py
-```
-
-Backend runs on:
-
-```
-http://localhost:5000
-```
-
----
-
-# 🔑 Environment Variables
-
-Create a `.env` file.
-
-```
-GEMINI_API_KEY=
-FIREBASE_API_KEY=
-GOOGLE_MAPS_API_KEY=
-TWILIO_ACCOUNT_SID=
-TWILIO_AUTH_TOKEN=
-EMAIL_SERVICE_API_KEY=
-```
-
-Never commit API keys or secrets to version control.
-
----
-
-# 📊 Future Enhancements
-
-- Live CCTV integration
-- Drone-assisted emergency monitoring
-- IoT sensor integration
-- Predictive accident analytics
-- Offline emergency reporting
-- Multilingual AI support
-- Wearable device integration
-- Role-based access control
-- Analytics dashboard
-- Mobile application
-- Voice-controlled emergency reporting
-
----
-
-# 🤝 Contributing
-
-Contributions are welcome.
-
-1. Fork the repository.
-2. Create a feature branch.
-3. Commit your changes.
-4. Push your branch.
-5. Open a Pull Request.
-
-Please follow the project's coding standards and maintain clear documentation.
-
----
-
-# 👨‍💻 Authors
-
-Developed by the RescueFlow AI Team.
-
----
-
-# 🌟 Vision
+## 🌟 Hackathon Vision
 
 Our vision is to transform emergency response by enabling AI-assisted incident detection, intelligent dispatch, and real-time coordination. RescueFlow AI aims to reduce response times, improve situational awareness, and support safer workplaces and communities through automation and data-driven decision-making.
+
+<div align="center">
+  <i>Developed with ❤️ by the RescueFlow AI Team</i>
+</div>
