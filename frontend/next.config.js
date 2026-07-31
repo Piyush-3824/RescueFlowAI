@@ -2,7 +2,7 @@
 const nextConfig = {
   // Experimental features
   experimental: {
-    typedRoutes: true,
+    typedRoutes: false,
   },
 
   // Image optimisation – add domains as services are integrated

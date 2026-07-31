@@ -17,7 +17,7 @@ export interface StoredIncident {
   severity:    "critical" | "high" | "moderate" | "low";
   status:      "pending" | "ai_processing" | "dispatched" | "resolved";
   location:    string;
-  department?: string;
+  department?: string | undefined;
   description: string;
   aiSummary:   string;
   recommendation: string;
@@ -26,7 +26,7 @@ export interface StoredIncident {
   confidence:  number;
   reportedAt:  string;
   method:      "photo" | "video" | "voice" | "text";
-  mediaBlob?:  Blob; // We can now store raw files safely in IndexedDB!
+  mediaBlob?:  Blob | undefined; // We can now store raw files safely in IndexedDB!
 }
 
 // ── Native IndexedDB Helper ─────────────────────────────────────────────────

@@ -18,7 +18,7 @@ export function IncidentHeatmap() {
       {/* Visual Plant Schematic Layout */}
       <div className="relative h-[220px] w-full rounded-xl border border-white/[0.05] bg-white/[0.02] p-3 grid grid-cols-2 gap-3">
         {DEMO_ZONES.map((zone) => {
-          const isSelected = selectedZone.id === zone.id;
+          const isSelected = selectedZone?.id === zone.id;
           return (
             <div
               key={zone.id}
@@ -49,9 +49,9 @@ export function IncidentHeatmap() {
       <div className="rounded-xl border border-white/[0.08] bg-white/[0.04] p-3 flex items-center justify-between text-xs">
         <div className="flex items-center gap-2">
           <MapPin className="h-4 w-4 text-amber-400" />
-          <span className="font-bold text-white/90">{selectedZone.name}</span>
+          <span className="font-bold text-white/90">{selectedZone?.name}</span>
           <span className="text-white/30">•</span>
-          <span className="text-white/50 font-medium">Hazard: <strong className="text-white/90">{selectedZone.hazard}</strong></span>
+          <span className="text-white/50 font-medium">Hazard: <strong className="text-white/90">{selectedZone?.hazard}</strong></span>
         </div>
         <span className="font-bold text-blue-400 tracking-wide">Telemetry Syncing Live</span>
       </div>

@@ -159,7 +159,7 @@ export default function ReportIncidentPage() {
 
   const toBase64 = (blob: Blob) => new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
-    reader.onloadend = () => resolve((reader.result as string).split(',')[1]);
+    reader.onloadend = () => resolve((reader.result as string).split(',')[1] || "");
     reader.onerror = reject;
     reader.readAsDataURL(blob);
   });
@@ -242,7 +242,7 @@ export default function ReportIncidentPage() {
     <div className="min-h-screen font-sans text-white/85 antialiased p-4 sm:p-6 lg:p-8">
       {/* Hidden file inputs */}
       <input ref={photoInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handlePhotoChange} />
-      <input ref={videoInputRef} type="file" accept="video/*" capture="camcorder" className="hidden" onChange={handleVideoChange} />
+      <input ref={videoInputRef} type="file" accept="video/*" capture="environment" className="hidden" onChange={handleVideoChange} />
 
       <div className="mx-auto max-w-2xl">
         {/* Header */}
