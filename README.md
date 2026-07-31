@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="fire.jpg" alt="RescueFlow AI Banner" width="100%" style="border-radius: 12px; max-height: 400px; object-fit: cover;" />
+  <!-- <img src="" alt="RescueFlow AI Banner" width="100%" style="border-radius: 12px; max-height: 400px; object-fit: cover;" /> -->
   <br/>
   <h1>🚨 RescueFlow AI</h1>
   <p><strong>From Incident Detection to Intelligent Emergency Response</strong></p>
