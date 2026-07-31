@@ -1,5 +1,7 @@
 <div align="center">
-  <!-- <img src="" alt="RescueFlow AI Banner" width="100%" style="border-radius: 12px; max-height: 400px; object-fit: cover;" /> -->
+  <!-- <img src="" alt="RescueFlow AI" width="100%" style="border-radius: 12px; max-height: 400px; object-fit: cover;" /> -->
+  <img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/16ed831a-79de-46c4-a798-bac86472e653" />
+
   <br/>
   <h1>🚨 RescueFlow AI</h1>
   <p><strong>From Incident Detection to Intelligent Emergency Response</strong></p>
@@ -127,7 +129,7 @@ graph TD
 
 ---
 
-## 🌟 Hackathon Vision
+## 🌟 Our Vision
 
 Our vision is to transform emergency response by enabling AI-assisted incident detection, intelligent dispatch, and real-time coordination. RescueFlow AI aims to reduce response times, improve situational awareness, and support safer workplaces and communities through automation and data-driven decision-making.
 
