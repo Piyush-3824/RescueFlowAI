@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, ChevronRight, AlertTriangle } from "lucide-react";
+import { Bell, ChevronRight, AlertTriangle, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { NotificationPanel } from "@/components/ui/notification-panel";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
+import { Sidebar } from "@/components/navigation/sidebar";
 import { MOCK_NOTIFICATIONS, MOCK_USER } from "@/lib/mock-data";
 import { useLanguage } from "@/lib/i18n/language-context";
 
@@ -37,6 +38,7 @@ function useBreadcrumbs(t: (key: any) => string) {
 
 export function Navbar() {
   const [notifOpen, setNotifOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { t } = useLanguage();
   const crumbs      = useBreadcrumbs(t);
   const unreadCount = MOCK_NOTIFICATIONS.filter((n) => !n.read).length;
@@ -48,8 +50,17 @@ export function Navbar() {
         aria-label="Top navigation bar"
         className="flex h-14 shrink-0 items-center justify-between px-4 md:px-6 z-30 glass-navbar"
       >
-        {/* Left: breadcrumb */}
-        <nav aria-label="Breadcrumbs" className="flex items-center gap-1.5 text-xs text-white/40">
+        <div className="flex items-center gap-2">
+          {/* Mobile Menu Toggle */}
+          <button
+            onClick={() => setMobileMenuOpen(true)}
+            className="flex items-center justify-center h-8 w-8 rounded-lg bg-white/[0.06] border border-white/[0.08] text-white/70 hover:bg-white/[0.1] hover:text-white md:hidden"
+          >
+            <Menu className="h-4 w-4" />
+          </button>
+
+          {/* Left: breadcrumb */}
+          <nav aria-label="Breadcrumbs" className="hidden sm:flex items-center gap-1.5 text-xs text-white/40">
           {crumbs.map((crumb, idx) => {
             const isLast = idx === crumbs.length - 1;
             return (
@@ -66,6 +77,7 @@ export function Navbar() {
             );
           })}
         </nav>
+        </div>
 
         {/* Right actions */}
         <div className="flex items-center gap-2.5">
@@ -105,6 +117,22 @@ export function Navbar() {
       </header>
 
       <NotificationPanel open={notifOpen} onClose={() => setNotifOpen(false)} />
+      
+      {/* Mobile Sidebar Overlay */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-50 flex md:hidden">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)} />
+          <div className="relative z-50 h-full w-[240px] flex-col shadow-2xl animate-in slide-in-from-left duration-200">
+            <Sidebar isMobile onClose={() => setMobileMenuOpen(false)} />
+            <button
+              onClick={() => setMobileMenuOpen(false)}
+              className="absolute top-4 -right-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 backdrop-blur-md"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }

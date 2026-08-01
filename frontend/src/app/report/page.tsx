@@ -323,7 +323,7 @@ export default function ReportIncidentPage() {
         {/* ================================================================= */}
         {step === 2 && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-            <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/[0.08] pb-4">
               <div>
                 <h1 className="text-2xl font-extrabold text-white/90">Incident Details</h1>
                 <p className="text-xs text-white/40">Review captured media and confirm context.</p>
@@ -527,7 +527,7 @@ export default function ReportIncidentPage() {
                 </div>
 
                 <div className="glass-card p-6 shadow-sm space-y-5">
-                  <div className="flex items-start justify-between border-b border-white/[0.08] pb-4">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/[0.08] pb-4">
                     <div>
                       <h2 className="text-xl font-extrabold text-white/90">{aiResult?.title}</h2>
                       <p className="text-xs text-white/40 mt-0.5">Location: <strong className="text-white/90">{location}</strong></p>

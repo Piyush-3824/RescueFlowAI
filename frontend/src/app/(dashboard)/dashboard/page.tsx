@@ -74,7 +74,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6 pb-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-extrabold text-white/90 tracking-tight">{t("dashboard_title")}</h1>
           <p className="text-xs text-white/40 mt-0.5">{t("dashboard_subtitle")}</p>
