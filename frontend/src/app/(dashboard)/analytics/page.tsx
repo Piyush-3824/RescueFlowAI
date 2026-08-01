@@ -8,9 +8,11 @@ import {
 import { DonutChart } from "@/components/ui/donut-chart";
 import { LineChart } from "@/components/ui/line-chart";
 import { useIncidents } from "@/hooks/use-incidents";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 export default function AnalyticsPage() {
   const { incidents } = useIncidents();
+  const { t } = useLanguage();
 
   const {
     totalIncidents,
@@ -78,9 +80,9 @@ export default function AnalyticsPage() {
         hazardCounts["Uncategorized"] = (hazardCounts["Uncategorized"] || 0) + 1;
       }
     });
-    const typeColors = ["#DC2626", "#F97316", "#F59E0B", "#2563EB", "#8B5CF6", "#EC4899"];
-    let tyData = Object.entries(hazardCounts)
-      .map(([label, value], i) => ({ label, value, color: typeColors[i % typeColors.length] }))
+    const typeColors: string[] = ["#DC2626", "#F97316", "#F59E0B", "#2563EB", "#8B5CF6", "#EC4899"];
+    let tyData: { label: string; value: number; color: string }[] = Object.entries(hazardCounts)
+      .map(([label, value], i) => ({ label, value, color: typeColors[i % typeColors.length] as string }))
       .sort((a,b) => b.value - a.value).slice(0, 5);
     if (tyData.length === 0) tyData = [{ label: "No Incidents", value: 1, color: "#333" }];
 
@@ -142,28 +144,88 @@ export default function AnalyticsPage() {
     };
   }, [incidents]);
 
+  // ── OSHA CSV Export ──────────────────────────────────────────────────────
+  const exportOSHALog = () => {
+    if (incidents.length === 0) {
+      alert("No incidents to export.");
+      return;
+    }
+
+    const headers = [
+      "Incident ID",
+      "Title",
+      "Severity",
+      "Status",
+      "Location",
+      "Reported At",
+      "Method",
+      "Description",
+      "AI Summary",
+      "Recommendation",
+      "Hazards",
+      "Response Teams",
+      "AI Confidence (%)"
+    ];
+
+    const escape = (val: string | number | undefined) => {
+      if (val === undefined || val === null) return "";
+      const str = String(val).replace(/"/g, '""');
+      return `"${str}"`;
+    };
+
+    const rows = incidents.map(inc => [
+      escape(inc.id),
+      escape(inc.title),
+      escape(inc.severity?.toUpperCase()),
+      escape(inc.status?.replace("_", " ").toUpperCase()),
+      escape(inc.location),
+      escape(new Date(inc.reportedAt).toLocaleString()),
+      escape(inc.method?.toUpperCase()),
+      escape(inc.description),
+      escape(inc.aiSummary),
+      escape(inc.recommendation),
+      escape(inc.hazards?.join("; ")),
+      escape(inc.teams?.join("; ")),
+      escape(inc.confidence),
+    ].join(","));
+
+    const csv = [headers.map(h => `"${h}"`).join(","), ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `OSHA_Log_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-6 pb-10">
       {/* Top Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-extrabold text-white/90">Safety Analytics</h1>
-          <p className="text-xs text-white/40">Executive safety metrics, risk trends and department compliance logs.</p>
+          <h1 className="text-2xl font-extrabold text-white/90">{t("analytics_title")}</h1>
+          <p className="text-xs text-white/40">{t("analytics_subtitle")}</p>
         </div>
 
-        <button className="flex items-center gap-1.5 rounded-xl bg-white/[0.06] border border-white/[0.08] hover:bg-white/[0.1] px-3.5 py-2 text-xs font-bold text-white/70 shadow-xs transition-colors">
-          <Download className="h-4 w-4 text-white/40" />
-          <span>Export OSHA Log</span>
+        <button
+          onClick={exportOSHALog}
+          className="flex items-center gap-1.5 rounded-xl bg-white/[0.06] border border-white/[0.08] hover:bg-amber-500/20 hover:border-amber-500/40 hover:text-amber-400 px-3.5 py-2 text-xs font-bold text-white/70 shadow-xs transition-all active:scale-[0.97]"
+        >
+          <Download className="h-4 w-4" />
+          <span>{t("analytics_export")}</span>
         </button>
       </div>
 
       {/* Top Cards (4 Key Metrics) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: "Safety Score",          value: `${safetyScore}/100`,  sub: "Based on active risks", icon: ShieldCheck, color: "text-emerald-400 bg-emerald-500/10 shadow-[0_0_12px_rgba(52,211,153,0.2)]" },
-          { label: "Total Incidents",       value: totalIncidents.toString(), sub: "Total recorded", icon: AlertTriangle, color: "text-amber-400 bg-amber-400/10 shadow-[0_0_12px_rgba(245,158,11,0.2)]" },
-          { label: "Average Response Time", value: "Real-time",  sub: "System avg.", icon: Timer, color: "text-blue-400 bg-blue-500/10 shadow-[0_0_12px_rgba(59,130,246,0.2)]" },
-          { label: "Resolved Incidents",    value: resolvedIncidents.toString(), sub: totalIncidents ? `${Math.round((resolvedIncidents/totalIncidents)*100)}% resolution rate` : "0% resolution rate",icon: CheckCircle2,  color: "text-emerald-400 bg-emerald-500/10 shadow-[0_0_12px_rgba(52,211,153,0.2)]" },
+          { label: t("analytics_safety_score"),     value: `${safetyScore}/100`,          sub: t("analytics_safety_score_sub"), icon: ShieldCheck,   color: "text-emerald-400 bg-emerald-500/10 shadow-[0_0_12px_rgba(52,211,153,0.2)]" },
+          { label: t("analytics_total_incidents"),   value: totalIncidents.toString(),      sub: t("analytics_total_sub"),         icon: AlertTriangle, color: "text-amber-400 bg-amber-400/10 shadow-[0_0_12px_rgba(245,158,11,0.2)]" },
+          { label: t("analytics_avg_response"),      value: "Real-time",                    sub: t("analytics_response_sub"),      icon: Timer,         color: "text-blue-400 bg-blue-500/10 shadow-[0_0_12px_rgba(59,130,246,0.2)]" },
+          { label: t("analytics_resolved"),          value: resolvedIncidents.toString(),   sub: totalIncidents ? `${Math.round((resolvedIncidents/totalIncidents)*100)}% resolution rate` : "0% resolution rate", icon: CheckCircle2, color: "text-emerald-400 bg-emerald-500/10 shadow-[0_0_12px_rgba(52,211,153,0.2)]" },
         ].map(({ label, value, sub, icon: Icon, color }) => (
           <div key={label} className="glass-card p-5">
             <div className="flex items-center justify-between">

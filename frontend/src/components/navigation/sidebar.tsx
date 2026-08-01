@@ -9,24 +9,26 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MOCK_STATS, MOCK_USER } from "@/lib/mock-data";
-
-const NAV_ITEMS = [
-  { label: "Overview",        href: "/dashboard",              icon: LayoutDashboard, badge: null },
-  { label: "Incidents",       href: "/incidents",              icon: AlertTriangle,   badge: MOCK_STATS.activeIncidents },
-  { label: "Report Incident", href: "/report",                 icon: PlusCircle,      badge: null },
-  { label: "Response Teams",  href: "/dispatch",               icon: Users,           badge: null },
-  { label: "Analytics",       href: "/analytics",              icon: BarChart2,       badge: null },
-  { label: "Reports",         href: "/incidents?view=reports", icon: FileText,        badge: null },
-] as const;
-
-const BOTTOM_NAV = [
-  { label: "Profile",  href: "/settings/profile", icon: User     },
-  { label: "Settings", href: "/settings",          icon: Settings },
-] as const;
+import { useLanguage } from "@/lib/i18n/language-context";
 
 export function Sidebar() {
   const pathname  = usePathname();
   const initials  = MOCK_USER.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+  const { t } = useLanguage();
+
+  const NAV_ITEMS = [
+    { labelKey: "nav_overview",  href: "/dashboard",              icon: LayoutDashboard, badge: null },
+    { labelKey: "nav_incidents", href: "/incidents",              icon: AlertTriangle,   badge: MOCK_STATS.activeIncidents },
+    { labelKey: "nav_report",    href: "/report",                 icon: PlusCircle,      badge: null },
+    { labelKey: "nav_teams",     href: "/dispatch",               icon: Users,           badge: null },
+    { labelKey: "nav_analytics", href: "/analytics",              icon: BarChart2,       badge: null },
+    { labelKey: "nav_reports",   href: "/incidents?view=reports", icon: FileText,        badge: null },
+  ] as const;
+
+  const BOTTOM_NAV = [
+    { labelKey: "nav_profile",  href: "/settings/profile", icon: User     },
+    { labelKey: "nav_settings", href: "/settings",          icon: Settings },
+  ] as const;
 
   return (
     <aside
@@ -49,10 +51,10 @@ export function Sidebar() {
       {/* Main nav */}
       <nav className="flex-1 overflow-y-auto p-3" aria-label="Main menu">
         <p className="mb-2 px-3 text-[10px] font-bold uppercase tracking-widest text-white/30">
-          Navigation
+          {t("nav_navigation")}
         </p>
         <ul className="space-y-0.5" role="list">
-          {NAV_ITEMS.map(({ label, href, icon: Icon, badge }) => {
+          {NAV_ITEMS.map(({ labelKey, href, icon: Icon, badge }) => {
             const isActive = pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
             return (
               <li key={href} className="relative">
@@ -72,7 +74,7 @@ export function Sidebar() {
                     )}
                     aria-hidden="true"
                   />
-                  <span className="flex-1">{label}</span>
+                  <span className="flex-1">{t(labelKey as any)}</span>
                   {badge !== null && badge > 0 && (
                     <span className={cn(
                       "flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-extrabold",
@@ -91,10 +93,10 @@ export function Sidebar() {
 
         {/* Secondary nav */}
         <p className="mb-2 mt-6 px-3 text-[10px] font-bold uppercase tracking-widest text-white/30">
-          System
+          {t("nav_system")}
         </p>
         <ul className="space-y-0.5" role="list">
-          {BOTTOM_NAV.map(({ label, href, icon: Icon }) => {
+          {BOTTOM_NAV.map(({ labelKey, href, icon: Icon }) => {
             const isActive = pathname === href;
             return (
               <li key={href}>
@@ -109,7 +111,7 @@ export function Sidebar() {
                   )}
                 >
                   <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
-                  <span>{label}</span>
+                  <span>{t(labelKey as any)}</span>
                 </Link>
               </li>
             );

@@ -2,42 +2,43 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, Search, ChevronRight, AlertTriangle } from "lucide-react";
+import { Bell, ChevronRight, AlertTriangle } from "lucide-react";
 import { useState } from "react";
 import { NotificationPanel } from "@/components/ui/notification-panel";
-import { SearchModal } from "@/components/ui/search-modal";
+import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { MOCK_NOTIFICATIONS, MOCK_USER } from "@/lib/mock-data";
+import { useLanguage } from "@/lib/i18n/language-context";
 
-const ROUTE_LABELS: Record<string, string> = {
-  "/dashboard":        "Safety Command Centre",
-  "/incidents":        "Incident Management",
-  "/dispatch":         "Response Teams",
-  "/analytics":        "Analytics & Reports",
-  "/map":              "Plant Site Map",
-  "/settings":         "System Settings",
-  "/settings/profile": "User Profile",
-  "/report":           "Report Incident",
-};
-
-function useBreadcrumbs() {
+function useBreadcrumbs(t: (key: any) => string) {
   const pathname = usePathname();
   const segments = pathname.split("/").filter(Boolean);
   const crumbs: { label: string; href: string }[] = [
-    { label: "Safety Centre", href: "/dashboard" },
+    { label: t("breadcrumb_home"), href: "/dashboard" },
   ];
+  const routeMap: Record<string, any> = {
+    "/dashboard":         "route_dashboard",
+    "/incidents":         "route_incidents",
+    "/dispatch":          "route_dispatch",
+    "/analytics":         "route_analytics",
+    "/map":               "route_map",
+    "/settings":          "route_settings",
+    "/settings/profile":  "route_profile",
+    "/report":            "route_report",
+  };
   let built = "";
   for (const seg of segments) {
     built += `/${seg}`;
-    const label = ROUTE_LABELS[built] ?? seg.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+    const key = routeMap[built];
+    const label = key ? t(key) : seg.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
     crumbs.push({ label, href: built });
   }
   return crumbs;
 }
 
 export function Navbar() {
-  const [notifOpen,  setNotifOpen]  = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const crumbs      = useBreadcrumbs();
+  const [notifOpen, setNotifOpen] = useState(false);
+  const { t } = useLanguage();
+  const crumbs      = useBreadcrumbs(t);
   const unreadCount = MOCK_NOTIFICATIONS.filter((n) => !n.read).length;
   const initials    = MOCK_USER.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 
@@ -52,7 +53,7 @@ export function Navbar() {
           {crumbs.map((crumb, idx) => {
             const isLast = idx === crumbs.length - 1;
             return (
-              <span key={crumb.href} className="flex items-center gap-1.5">
+              <span key={`${crumb.href}-${idx}`} className="flex items-center gap-1.5">
                 {idx > 0 && <ChevronRight className="h-3 w-3 text-white/20" aria-hidden="true" />}
                 {isLast ? (
                   <span className="font-semibold text-white/80">{crumb.label}</span>
@@ -68,17 +69,8 @@ export function Navbar() {
 
         {/* Right actions */}
         <div className="flex items-center gap-2.5">
-          {/* Quick Search */}
-          <button
-            onClick={() => setSearchOpen(true)}
-            className="flex items-center gap-2 rounded-xl bg-white/[0.06] border border-white/[0.08] px-3 py-1.5 text-xs text-white/40 hover:bg-white/[0.10] hover:text-white/70 transition-all"
-          >
-            <Search className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline font-medium">Search...</span>
-            <kbd className="hidden sm:inline-block rounded bg-white/[0.08] px-1.5 py-0.5 text-[10px] font-mono text-white/30 border border-white/10">
-              ⌘K
-            </kbd>
-          </button>
+          {/* Language Switcher — replaces search */}
+          <LanguageSwitcher />
 
           {/* Report Incident CTA */}
           <Link
@@ -86,7 +78,7 @@ export function Navbar() {
             className="flex items-center gap-1.5 rounded-xl bg-amber-500 px-3.5 py-1.5 text-xs font-bold text-slate-950 hover:bg-amber-400 transition-all shadow-[0_0_16px_rgba(245,158,11,0.3)]"
           >
             <AlertTriangle className="h-3.5 w-3.5" />
-            <span>Report</span>
+            <span>{t("dashboard_report_btn")}</span>
           </Link>
 
           {/* Notifications */}
@@ -112,8 +104,7 @@ export function Navbar() {
         </div>
       </header>
 
-      <NotificationPanel isOpen={notifOpen} onClose={() => setNotifOpen(false)} />
-      <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
+      <NotificationPanel open={notifOpen} onClose={() => setNotifOpen(false)} />
     </>
   );
 }

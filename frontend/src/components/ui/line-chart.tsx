@@ -30,25 +30,26 @@ export function LineChart({
 }: LineChartProps) {
   if (!data.length) return null;
 
-  const padding = { top: 12, right: 8, bottom: showLabels ? 24 : 8, left: 8 };
+  const padding = { top: 12, right: 32, bottom: showLabels ? 28 : 12, left: 32 };
   const chartH  = height - padding.top - padding.bottom;
   const maxVal  = Math.max(...data);
   const minVal  = Math.min(...data);
   const range   = maxVal - minVal || 1;
 
-  // We'll calculate width based on number of points
+  // Use a wide logical width to match typical container ratios 
+  // and minimize viewBox distortion when using preserveAspectRatio="none"
   const pointCount = data.length;
-  const W = 100; // percentage-based viewBox width
+  const W = 800; 
 
   const x = (i: number) => (i / (pointCount - 1)) * (W - padding.left - padding.right) + padding.left;
   const y = (v: number) => padding.top + ((maxVal - v) / range) * chartH;
 
   const polyPoints = data.map((v, i) => `${x(i)},${y(v)}`).join(" ");
-  const areaPath   = `M ${x(0)},${y(data[0])} ` +
+  const areaPath   = `M ${x(0)},${y(data[0]!)} ` +
     data.slice(1).map((v, i) => `L ${x(i + 1)},${y(v)}`).join(" ") +
-    ` L ${x(pointCount - 1)},${y(minVal) + chartH + padding.top} L ${x(0)},${y(minVal) + chartH + padding.top} Z`;
+    ` L ${x(pointCount - 1)},${height} L ${x(0)},${height} Z`;
 
-  const linePath = `M ${x(0)},${y(data[0])} ` +
+  const linePath = `M ${x(0)},${y(data[0]!)} ` +
     data.slice(1).map((v, i) => `L ${x(i + 1)},${y(v)}`).join(" ");
 
   const gradId = `line-chart-grad-${Math.random().toString(36).slice(2)}`;
@@ -79,11 +80,12 @@ export function LineChart({
           d={linePath}
           fill="none"
           stroke={color}
-          strokeWidth={1.5}
+          strokeWidth={2.5}
           strokeLinecap="round"
           strokeLinejoin="round"
+          vectorEffect="non-scaling-stroke"
           style={animated ? {
-            strokeDasharray: 1000,
+            strokeDasharray: 2000,
             strokeDashoffset: 0,
             animation: "draw-line 1.5s ease-out forwards",
           } : undefined}
@@ -95,10 +97,11 @@ export function LineChart({
             key={i}
             cx={x(i)}
             cy={y(v)}
-            r={2.5}
+            r={5}
             fill={color}
             stroke="hsl(224 47% 4%)"
-            strokeWidth={1.5}
+            strokeWidth={2}
+            vectorEffect="non-scaling-stroke"
           />
         ))}
 
@@ -107,10 +110,11 @@ export function LineChart({
           <text
             key={i}
             x={x(i)}
-            y={height - 2}
+            y={height - 6}
             textAnchor="middle"
-            fontSize={7}
+            fontSize={12}
             fill="hsl(215 16% 45%)"
+            vectorEffect="non-scaling-stroke"
           >
             {label}
           </text>

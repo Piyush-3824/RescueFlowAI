@@ -11,6 +11,7 @@ import { IncidentHeatmap } from "@/components/dashboard/incident-heatmap";
 import { IncidentTimeline } from "@/components/dashboard/incident-timeline";
 import { useIncidents } from "@/hooks/use-incidents";
 import { useSpeechSynthesis } from "@/hooks/use-speech";
+import { useLanguage } from "@/lib/i18n/language-context";
 
 // ── Static KPIs ───────────────────────────────────────────────────────────────
 const BASE_KPIS = [
@@ -29,6 +30,7 @@ const STATIC_INCIDENTS = [
 export default function DashboardPage() {
   const { incidents: liveIncidents } = useIncidents();
   const { speak, stop: stopSpeech, speaking } = useSpeechSynthesis();
+  const { t } = useLanguage();
 
   const newIncidents = liveIncidents.filter(
     (inc) => !STATIC_INCIDENTS.find((s) => s.id === inc.id)
@@ -45,16 +47,17 @@ export default function DashboardPage() {
           ? "bg-orange-500/20 text-orange-400 border border-orange-500/30"
           : "bg-amber-500/20 text-amber-400 border border-amber-500/30",
       zone: inc.location,
-      time: "Just now",
+      time: t("dashboard_just_now"),
     })),
     ...STATIC_INCIDENTS,
   ].slice(0, 6);
 
-  const kpis = BASE_KPIS.map((k) =>
-    k.label === "Active Incidents"
-      ? { ...k, value: String(12 + newIncidents.length) }
-      : k
-  );
+  const kpis = [
+    { label: t("kpi_active_incidents"),  value: String(12 + newIncidents.length), sub: "4 requires immediate action", icon: AlertTriangle, iconColor: "text-amber-400",   glowClass: "shadow-[0_0_12px_rgba(245,158,11,0.25)]",  bg: "bg-amber-400/10",   pulse: false },
+    { label: t("kpi_critical"),           value: "3",      sub: "Zone C, Bay 4, Sector 1",     icon: ShieldCheck,   iconColor: "text-red-400",     glowClass: "shadow-[0_0_12px_rgba(239,68,68,0.3)]",   bg: "bg-red-500/10",     pulse: true  },
+    { label: t("kpi_avg_response"),       value: "4m 12s", sub: "18% faster than last week",   icon: Clock,         iconColor: "text-blue-400",    glowClass: "shadow-[0_0_12px_rgba(59,130,246,0.2)]",  bg: "bg-blue-500/10",    pulse: false },
+    { label: t("kpi_safety_score"),       value: "87/100", sub: "OSHA Compliant Status",        icon: CheckCircle2,  iconColor: "text-emerald-400", glowClass: "shadow-[0_0_12px_rgba(52,211,153,0.2)]",  bg: "bg-emerald-500/10", pulse: false },
+  ];
 
   const handleBriefing = () => {
     if (speaking) { stopSpeech(); return; }
@@ -73,8 +76,8 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-extrabold text-white/90 tracking-tight">Safety Command Centre</h1>
-          <p className="text-xs text-white/40 mt-0.5">Real-time site monitoring, incident tracking and automated dispatch.</p>
+          <h1 className="text-2xl font-extrabold text-white/90 tracking-tight">{t("dashboard_title")}</h1>
+          <p className="text-xs text-white/40 mt-0.5">{t("dashboard_subtitle")}</p>
         </div>
         <div className="flex items-center gap-2.5">
           <button
@@ -88,7 +91,7 @@ export default function DashboardPage() {
             )}
           >
             {speaking ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-            {speaking ? "Stop" : "Briefing"}
+            {speaking ? t("dashboard_briefing_stop") : t("dashboard_briefing_play")}
           </button>
 
           <Link
@@ -96,7 +99,7 @@ export default function DashboardPage() {
             className="flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-slate-950 hover:bg-amber-400 transition-all shadow-[0_0_20px_rgba(245,158,11,0.35)]"
           >
             <AlertTriangle className="h-4 w-4" />
-            <span>Report Incident</span>
+            <span>{t("dashboard_report_btn")}</span>
             {newIncidents.length > 0 && (
               <span className="ml-1 rounded-full bg-slate-950/40 text-white text-[10px] font-black w-4 h-4 flex items-center justify-center">
                 {newIncidents.length}
@@ -141,9 +144,9 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <MapPin className="h-4 w-4 text-amber-400" />
-              <h2 className="text-sm font-bold text-white/80">Site / Plant Map</h2>
+              <h2 className="text-sm font-bold text-white/80">{t("dashboard_site_map")}</h2>
             </div>
-            <span className="text-[10px] font-semibold text-white/30 uppercase tracking-widest">Live Telemetry</span>
+            <span className="text-[10px] font-semibold text-white/30 uppercase tracking-widest">{t("dashboard_live_telemetry")}</span>
           </div>
           <div className="overflow-hidden rounded-xl border border-white/[0.07] bg-white/[0.02]">
             <IncidentHeatmap />
@@ -155,10 +158,10 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between border-b border-white/[0.07] pb-3">
             <div className="flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-red-400" />
-              <h2 className="text-sm font-bold text-white/80">Active Incidents</h2>
+              <h2 className="text-sm font-bold text-white/80">{t("dashboard_active_incidents")}</h2>
             </div>
             <Link href="/incidents" className="text-xs font-bold text-blue-400 hover:text-blue-300 transition-colors">
-              View All
+              {t("dashboard_view_all")}
             </Link>
           </div>
 
@@ -195,7 +198,7 @@ export default function DashboardPage() {
             href="/incidents"
             className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.07] text-xs font-bold text-white/50 hover:bg-white/[0.08] hover:text-white/70 transition-colors"
           >
-            <span>Manage All {12 + newIncidents.length} Incidents</span>
+            <span>{t("dashboard_manage_all")} {12 + newIncidents.length} {t("dashboard_incidents_suffix")}</span>
             <ChevronRight className="h-3.5 w-3.5" />
           </Link>
         </div>
@@ -206,9 +209,9 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between border-b border-white/[0.07] pb-3">
           <div className="flex items-center gap-2">
             <Activity className="h-4 w-4 text-blue-400" />
-            <h2 className="text-sm font-bold text-white/80">Recent Incident Timeline</h2>
+            <h2 className="text-sm font-bold text-white/80">{t("dashboard_timeline")}</h2>
           </div>
-          <span className="text-[10px] text-white/30 font-medium">Auto-updated 1m ago</span>
+          <span className="text-[10px] text-white/30 font-medium">{t("dashboard_auto_updated")}</span>
         </div>
         <IncidentTimeline />
       </div>
