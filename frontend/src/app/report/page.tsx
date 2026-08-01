@@ -48,8 +48,8 @@ export default function ReportIncidentPage() {
   const [recordSeconds, setRecordSeconds] = useState(0);
 
   // Context fields — auto-fetched from browser
-  const [location,     setLocation]     = useState("Chitkara University, Rajpura");
-  const [locationLoading, setLocationLoading] = useState(false);
+  const [location,     setLocation]     = useState("Fetching location...");
+  const [locationLoading, setLocationLoading] = useState(true);
   const [detectedTime, setDetectedTime] = useState("");
   const [textDescription, setTextDescription] = useState("");
 
@@ -88,10 +88,44 @@ export default function ReportIncidentPage() {
   // Sync speech-to-text transcript → description field
   useEffect(() => { if (transcript) setTextDescription(transcript); }, [transcript]);
 
-  // Auto-fetch time on mount
+  // Auto-fetch time and location on mount
   useEffect(() => {
     const now = new Date();
     setDetectedTime(now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
+
+    if (typeof window !== "undefined" && "geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const { latitude, longitude } = position.coords;
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+            if (res.ok) {
+              const data = await res.json();
+              if (data.display_name) {
+                setLocation(data.display_name);
+              } else {
+                setLocation(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
+              }
+            } else {
+              setLocation(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
+            }
+          } catch (e) {
+            setLocation(`${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)}`);
+          } finally {
+            setLocationLoading(false);
+          }
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          setLocation("Location access denied or unavailable");
+          setLocationLoading(false);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    } else {
+      setLocation("Location not supported");
+      setLocationLoading(false);
+    }
   }, []);
   // ── Read query param ?method= on mount to auto-select method ─────────────
   useEffect(() => {
