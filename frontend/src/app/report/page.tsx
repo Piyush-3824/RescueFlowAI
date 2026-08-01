@@ -584,7 +584,7 @@ export default function ReportIncidentPage() {
                 </div>
 
                 <button
-                  onClick={() => { stopSpeech(); router.push("/dispatch"); }}
+                  onClick={() => { stopSpeech(); router.push("/incidents"); }}
                   className="w-full flex items-center justify-center gap-2 rounded-2xl bg-amber-500 py-4 text-base font-extrabold text-slate-950 shadow-md hover:bg-amber-400 transition-all active:scale-[0.98]"
                 >
                   <span>Start Response Workflow</span>
