@@ -135,4 +135,4 @@ Our vision is to transform emergency response by enabling AI-assistance with inc
 
 <div align="center">
   <i>Developed with ❤️ by the RescueFlow AI Team</i>
-</div>
+</div>  
