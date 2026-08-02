@@ -123,7 +123,7 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
                         <Link
                           key={incident.id}
                           href={`/incidents/${incident.id}`}
-                          onClick={onClose}
+                          onClick={() => onClose?.()}
                           className="flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors hover:bg-white/[0.04]"
                         >
                           <AlertTriangle className={cn("h-4 w-4 shrink-0", SEV_COLOR[incident.severity])} />
@@ -146,7 +146,7 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
                     <Link
                       key={href}
                       href={href}
-                      onClick={onClose}
+                      onClick={() => onClose?.()}
                       className="flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors hover:bg-white/[0.04]"
                     >
                       <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-400/10">

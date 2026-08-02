@@ -41,7 +41,7 @@ export function Sidebar({ isMobile, onClose }: { isMobile?: boolean; onClose?: (
       {/* Logo */}
       <Link
         href="/"
-        onClick={onClose}
+        onClick={() => onClose?.()}
         className="flex h-16 items-center gap-2.5 px-5 border-b border-white/[0.07] hover:bg-white/[0.04] transition-colors"
       >
         <div className="flex h-8 w-8 items-center justify-center rounded-xl glass-amber ring-0 shadow-[0_0_12px_rgba(245,158,11,0.25)]">
@@ -64,7 +64,7 @@ export function Sidebar({ isMobile, onClose }: { isMobile?: boolean; onClose?: (
               <li key={href} className="relative">
                 <Link
                   href={href}
-                  onClick={onClose}
+                  onClick={() => onClose?.()}
                   aria-current={isActive ? "page" : undefined}
                   className={cn(
                     "group flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all duration-150",
@@ -107,7 +107,7 @@ export function Sidebar({ isMobile, onClose }: { isMobile?: boolean; onClose?: (
               <li key={href}>
                 <Link
                   href={href}
-                  onClick={onClose}
+                  onClick={() => onClose?.()}
                   aria-current={isActive ? "page" : undefined}
                   className={cn(
                     "flex items-center gap-3 rounded-xl px-3.5 py-2 text-sm font-medium transition-colors",

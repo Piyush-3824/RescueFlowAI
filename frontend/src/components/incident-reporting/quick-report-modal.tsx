@@ -179,7 +179,7 @@ export function QuickReportModal({ isOpen, onClose }: QuickReportModalProps) {
 
                     <Link
                       href="/dispatch"
-                      onClick={onClose}
+                      onClick={() => onClose?.()}
                       className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-500 py-3.5 text-sm font-extrabold text-slate-950 hover:bg-amber-400 transition-all"
                     >
                       <span>Start Response Workflow</span>
