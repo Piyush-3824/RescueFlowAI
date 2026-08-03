@@ -83,7 +83,7 @@ export default function IncidentDetailPage() {
   }
 
   const currentStep =
-    incident.status === "resolved"      ? 5 :
+    incident.status === "resolved"      ? 6 :
     incident.status === "dispatched"    ? 4 :
     incident.status === "ai_processing" ? 2 : 1;
 
@@ -126,6 +126,40 @@ export default function IncidentDetailPage() {
           <Radio className="h-3.5 w-3.5" />
           <span>Manage Response</span>
         </Link>
+      </div>
+
+      {/* Lifecycle */}
+      <div className="glass-card p-6 shadow-xs space-y-4">
+        <h3 className="text-xs font-bold uppercase tracking-wider text-white/30">Incident Lifecycle</h3>
+        <div className="flex items-center justify-between">
+          {LIFECYCLE_STEPS.map((title, idx) => {
+            const step      = idx + 1;
+            const isDone    = currentStep > step;
+            const isCurrent = currentStep === step;
+            return (
+              <React.Fragment key={title}>
+                <div className="flex flex-col items-center gap-2">
+                  <div className={cn(
+                    "flex h-9 w-9 items-center justify-center rounded-full text-xs font-extrabold transition-all",
+                    isDone    ? "bg-emerald-600 text-white" :
+                    isCurrent ? "bg-amber-500/10 border border-amber-500/200 text-slate-950 ring-4 ring-amber-100" :
+                                "bg-white/[0.08] text-white/30 border border-white/[0.08]"
+                  )}>
+                    {isDone ? <Check className="h-4 w-4 stroke-[3]" /> : step}
+                  </div>
+                  <span className={cn("text-xs font-bold",
+                    isDone ? "text-emerald-400" : isCurrent ? "text-amber-400" : "text-white/30"
+                  )}>{title}</span>
+                </div>
+                {idx < LIFECYCLE_STEPS.length - 1 && (
+                  <div className={cn("h-1 flex-1 mx-3 rounded-full transition-all",
+                    currentStep > idx + 1 ? "bg-emerald-500" : "bg-white/[0.08]"
+                  )} />
+                )}
+              </React.Fragment>
+            );
+          })}
+        </div>
       </div>
 
       {/* Two-column layout */}
@@ -333,40 +367,6 @@ export default function IncidentDetailPage() {
               </div>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Lifecycle */}
-      <div className="glass-card p-6 shadow-xs space-y-4">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-white/30">Incident Lifecycle</h3>
-        <div className="flex items-center justify-between">
-          {LIFECYCLE_STEPS.map((title, idx) => {
-            const step      = idx + 1;
-            const isDone    = currentStep > step;
-            const isCurrent = currentStep === step;
-            return (
-              <React.Fragment key={title}>
-                <div className="flex flex-col items-center gap-2">
-                  <div className={cn(
-                    "flex h-9 w-9 items-center justify-center rounded-full text-xs font-extrabold transition-all",
-                    isDone    ? "bg-emerald-600 text-white" :
-                    isCurrent ? "bg-amber-500/10 border border-amber-500/200 text-slate-950 ring-4 ring-amber-100" :
-                                "bg-white/[0.08] text-white/30 border border-white/[0.08]"
-                  )}>
-                    {isDone ? <Check className="h-4 w-4 stroke-[3]" /> : step}
-                  </div>
-                  <span className={cn("text-xs font-bold",
-                    isDone ? "text-emerald-400" : isCurrent ? "text-amber-400" : "text-white/30"
-                  )}>{title}</span>
-                </div>
-                {idx < LIFECYCLE_STEPS.length - 1 && (
-                  <div className={cn("h-1 flex-1 mx-3 rounded-full transition-all",
-                    currentStep > idx + 1 ? "bg-emerald-500" : "bg-white/[0.08]"
-                  )} />
-                )}
-              </React.Fragment>
-            );
-          })}
         </div>
       </div>
     </div>

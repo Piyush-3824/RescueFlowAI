@@ -8,7 +8,7 @@ import {
   Camera, Video, Mic, FileText, MapPin, Clock,
   CheckCircle2, ArrowRight, AlertTriangle, Users,
   ChevronLeft, Sparkles, RefreshCw, MicOff, Volume2, VolumeX,
-  Square, ImageIcon, Film, Play
+  Square, ImageIcon, Film, Play, Check
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSpeechSynthesis, useSpeechRecognition } from "@/hooks/use-speech";
@@ -71,7 +71,8 @@ export default function ReportIncidentPage() {
   // Hooks
   const { speak, stop: stopSpeech, speaking } = useSpeechSynthesis();
   const { transcript, state: recState, supported: recSupported, startListening, stopListening } = useSpeechRecognition();
-  const { addIncident } = useIncidents();
+  const { addIncident, updateStatus } = useIncidents();
+  const [currentIncidentId, setCurrentIncidentId] = useState<string | null>(null);
 
   const typedSummary = useTypewriter(aiResult?.summary || "", 18, resultReady);
 
@@ -227,8 +228,11 @@ export default function ReportIncidentPage() {
 
       setAiResult(data);
       
+      const incidentId = `INC-${Date.now()}`;
+      setCurrentIncidentId(incidentId);
+
       const incident: StoredIncident = {
-        id:             `INC-${Date.now()}`,
+        id:             incidentId,
         title:          data.title,
         severity:       data.severity,
         status:         "pending",
@@ -591,7 +595,12 @@ export default function ReportIncidentPage() {
                     });
                     
                     const finalStep = teams.length + 2;
-                    setTimeout(() => setDispatchStep(finalStep), 1000 + teams.length * 1200 + 800);
+                    setTimeout(() => {
+                      setDispatchStep(finalStep);
+                      if (currentIncidentId) {
+                        updateStatus(currentIncidentId, "resolved");
+                      }
+                    }, 1000 + teams.length * 1200 + 800);
                     
                     setTimeout(() => router.push("/dashboard"), 1000 + teams.length * 1200 + 2000);
                   }}
@@ -608,43 +617,111 @@ export default function ReportIncidentPage() {
         {/* ================================================================= */}
         {/* STEP 4 – DISPATCHING                                               */}
         {/* ================================================================= */}
-        {step === 4 && (
-          <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="space-y-6">
-            <div className="glass-card p-8 text-center space-y-6 shadow-xs">
-              <div className="flex justify-center">
-                <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-blue-50 border border-blue-200">
-                  <RefreshCw className="h-8 w-8 text-blue-500 animate-spin" />
+        {step === 4 && (() => {
+          const LIFECYCLE_STEPS = ["Reported", "AI Analysed", "Assigned", "In Progress", "Resolved"];
+          const numTeams = aiResult?.teams?.length || 1;
+          const finalDispatchStep = numTeams + 2;
+          const isDispatchFinished = dispatchStep >= finalDispatchStep;
+          
+          // Progress the top lifecycle as the dispatch steps proceed
+          let lifecycleCurrentStep = 3; // Starts at Assigned
+          if (dispatchStep > 0) lifecycleCurrentStep = 4; // In Progress
+          if (dispatchStep > numTeams) lifecycleCurrentStep = 5; 
+          if (isDispatchFinished) lifecycleCurrentStep = 6; // Fully Resolved
+
+          return (
+            <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="space-y-6">
+              
+              {/* Lifecycle Component */}
+              <div className="glass-card p-6 shadow-xs space-y-4">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-white/30">Incident Lifecycle</h3>
+                <div className="flex items-center justify-between">
+                  {LIFECYCLE_STEPS.map((title, idx) => {
+                    const lStep     = idx + 1;
+                    const isDone    = lifecycleCurrentStep > lStep;
+                    const isCurrent = lifecycleCurrentStep === lStep;
+                    return (
+                      <React.Fragment key={title}>
+                        <div className="flex flex-col items-center gap-2">
+                          <div className={cn(
+                            "flex h-9 w-9 items-center justify-center rounded-full text-xs font-extrabold transition-all",
+                            isDone    ? "bg-emerald-600 text-white" :
+                            isCurrent ? "bg-amber-500/10 border border-amber-500/200 text-amber-500 ring-4 ring-amber-500/20" :
+                                        "bg-white/[0.08] text-white/30 border border-white/[0.08]"
+                          )}>
+                            {isDone ? <Check className="h-4 w-4 stroke-[3]" /> : lStep}
+                          </div>
+                          <span className={cn("text-[10px] sm:text-xs font-bold text-center",
+                            isDone ? "text-emerald-400" : isCurrent ? "text-amber-400" : "text-white/30"
+                          )}>{title}</span>
+                        </div>
+                        {idx < LIFECYCLE_STEPS.length - 1 && (
+                          <div className={cn("h-1 flex-1 mx-1 sm:mx-3 rounded-full transition-all",
+                            lifecycleCurrentStep > idx + 1 ? "bg-emerald-500" : "bg-white/[0.08]"
+                          )} />
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
                 </div>
               </div>
-              <div>
-                <h2 className="text-xl font-extrabold text-white/90">Dispatching Response Teams</h2>
-                <p className="text-xs text-white/40 mt-1 font-mono">Initiating communication protocols…</p>
-              </div>
-              <div className="max-w-xs mx-auto text-left space-y-2 text-xs font-semibold">
-                <div className="flex items-center gap-2.5">
-                  {dispatchStep > 0
-                    ? <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-                    : <div className="h-4 w-4 rounded-full border border-white/[0.2] shrink-0" />}
-                  <span className={dispatchStep > 0 ? "text-white/90 font-bold" : "text-white/30"}>Connecting to dispatch network</span>
+
+              <div className="glass-card p-8 text-center space-y-6 shadow-xs">
+                <div className="flex justify-center">
+                  <div className={cn("relative flex h-16 w-16 items-center justify-center rounded-full border transition-colors", 
+                    isDispatchFinished ? "bg-emerald-50 border-emerald-200" : "bg-blue-50 border-blue-200"
+                  )}>
+                    {isDispatchFinished ? (
+                      <CheckCircle2 className="h-8 w-8 text-emerald-600" />
+                    ) : (
+                      <RefreshCw className="h-8 w-8 text-blue-500 animate-spin" />
+                    )}
+                  </div>
                 </div>
-                {aiResult?.teams?.map((team, idx) => (
-                  <div key={team} className="flex items-center gap-2.5">
-                    {dispatchStep > idx + 1
+                <div>
+                  <h2 className="text-xl font-extrabold text-white/90">
+                    {isDispatchFinished ? "Dispatch Complete" : "Dispatching Response Teams"}
+                  </h2>
+                  <p className="text-xs text-white/40 mt-1 font-mono">
+                    {isDispatchFinished ? "All units notified successfully." : "Initiating communication protocols…"}
+                  </p>
+                </div>
+                <div className="max-w-xs mx-auto text-left space-y-2 text-xs font-semibold">
+                  <div className="flex items-center gap-2.5">
+                    {dispatchStep > 0
                       ? <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
                       : <div className="h-4 w-4 rounded-full border border-white/[0.2] shrink-0" />}
-                    <span className={dispatchStep > idx + 1 ? "text-white/90 font-bold" : "text-white/30"}>Notifying {team}</span>
+                    <span className={dispatchStep > 0 ? "text-white/90 font-bold" : "text-white/30"}>Connecting to dispatch network</span>
                   </div>
-                ))}
-                <div className="flex items-center gap-2.5">
-                  {dispatchStep > (aiResult?.teams?.length || 0) + 1
-                    ? <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
-                    : <div className="h-4 w-4 rounded-full border border-white/[0.2] shrink-0" />}
-                  <span className={dispatchStep > (aiResult?.teams?.length || 0) + 1 ? "text-white/90 font-bold" : "text-white/30"}>Sending exact coordinates &amp; briefing</span>
+                  {aiResult?.teams?.map((team, idx) => (
+                    <div key={team} className="flex items-center gap-2.5">
+                      {dispatchStep > idx + 1
+                        ? <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                        : <div className="h-4 w-4 rounded-full border border-white/[0.2] shrink-0" />}
+                      <span className={dispatchStep > idx + 1 ? "text-white/90 font-bold" : "text-white/30"}>Notifying {team}</span>
+                    </div>
+                  ))}
+                  <div className="flex items-center gap-2.5">
+                    {dispatchStep > (aiResult?.teams?.length || 0) + 1
+                      ? <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                      : <div className="h-4 w-4 rounded-full border border-white/[0.2] shrink-0" />}
+                    <span className={dispatchStep > (aiResult?.teams?.length || 0) + 1 ? "text-white/90 font-bold" : "text-white/30"}>Sending exact coordinates &amp; briefing</span>
+                  </div>
                 </div>
+
+                {/* Call status div */}
+                {isDispatchFinished && (
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-6 flex items-start sm:items-center gap-3 rounded-xl border border-emerald-200/50 bg-emerald-500/10 px-4 py-3 text-left">
+                    <CheckCircle2 className="h-6 w-6 text-emerald-400 shrink-0" />
+                    <span className="text-sm font-bold text-emerald-400">
+                      These teams are informed and they will be reaching the location in approximately 2 minutes.
+                    </span>
+                  </motion.div>
+                )}
               </div>
-            </div>
-          </motion.div>
-        )}
+            </motion.div>
+          );
+        })()}
       </div>
     </div>
   );
