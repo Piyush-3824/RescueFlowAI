@@ -23,10 +23,11 @@ export interface StoredIncident {
   recommendation: string;
   hazards:     string[];
   teams:       string[];
-  confidence:  number;
-  reportedAt:  string;
-  method:      "photo" | "video" | "voice" | "text";
-  mediaBlob?:  Blob | undefined; // We can now store raw files safely in IndexedDB!
+  confidence:     number;
+  workersAtRisk?: number;
+  reportedAt:     string;
+  method:         "photo" | "video" | "voice" | "text";
+  mediaBlob?:     Blob | undefined; // We can now store raw files safely in IndexedDB!
 }
 
 // ── Native IndexedDB Helper ─────────────────────────────────────────────────

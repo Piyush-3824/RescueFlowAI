@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, X, AlertTriangle, BarChart2, Settings, User, FileText, ArrowRight } from "lucide-react";
-import { MOCK_INCIDENTS } from "@/lib/mock-data";
+import { useIncidents } from "@/hooks/use-incidents";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
@@ -13,23 +13,27 @@ interface SearchModalProps {
 }
 
 const QUICK_LINKS = [
-  { label: "Dashboard",          href: "/dashboard",  icon: BarChart2      },
-  { label: "Report Incident",    href: "/report",     icon: AlertTriangle  },
-  { label: "Incident History",   href: "/incidents",  icon: FileText       },
-  { label: "Settings",           href: "/settings",   icon: Settings       },
-  { label: "Profile",            href: "/settings/profile", icon: User     },
+  { label: "Dashboard",        href: "/dashboard",       icon: BarChart2     },
+  { label: "Report Incident",  href: "/report",          icon: AlertTriangle },
+  { label: "Incident History", href: "/incidents",       icon: FileText      },
+  { label: "Settings",         href: "/settings",        icon: Settings      },
+  { label: "Profile",          href: "/settings/profile",icon: User          },
 ];
 
 export function SearchModal({ open, onClose }: SearchModalProps) {
   const [query, setQuery]   = useState("");
   const inputRef            = useRef<HTMLInputElement>(null);
+  const { incidents }       = useIncidents();
 
+  // Search only over real user-reported incidents
   const results = query.length >= 2
-    ? MOCK_INCIDENTS.filter((i) =>
-        `${i.title} ${i.location} ${i.department} ${i.id}`
-          .toLowerCase()
-          .includes(query.toLowerCase())
-      ).slice(0, 5)
+    ? incidents
+        .filter((i) =>
+          `${i.title} ${i.location} ${i.id} ${i.description}`
+            .toLowerCase()
+            .includes(query.toLowerCase())
+        )
+        .slice(0, 5)
     : [];
 
   useEffect(() => {
@@ -44,7 +48,7 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
-        if (!open) onClose(); // toggle
+        if (!open) onClose();
       }
       if (e.key === "Escape") onClose();
     };
@@ -89,7 +93,7 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
               <input
                 ref={inputRef}
                 type="search"
-                placeholder="Search incidents, reports, departments…"
+                placeholder="Search your incidents by title, location, ID…"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 className="flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground/60"
@@ -111,13 +115,19 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
               {query.length >= 2 ? (
                 <>
                   {results.length === 0 ? (
-                    <p className="px-3 py-6 text-center text-sm text-muted-foreground">
-                      No incidents matching &ldquo;{query}&rdquo;
-                    </p>
+                    <div className="px-3 py-8 text-center space-y-1">
+                      <p className="text-sm text-muted-foreground">No incidents matching &ldquo;{query}&rdquo;</p>
+                      {incidents.length === 0 && (
+                        <p className="text-xs text-muted-foreground/60">
+                          You haven&apos;t reported any incidents yet.{" "}
+                          <Link href="/report" onClick={onClose} className="text-amber-400 hover:underline">Report one now</Link>
+                        </p>
+                      )}
+                    </div>
                   ) : (
                     <div className="space-y-0.5">
                       <p className="px-3 py-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
-                        Incidents
+                        Your Incidents
                       </p>
                       {results.map((incident) => (
                         <Link

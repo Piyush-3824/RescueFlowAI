@@ -8,17 +8,20 @@ import {
   User, Shield, PlusCircle, Users
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { MOCK_STATS, MOCK_USER } from "@/lib/mock-data";
 import { useLanguage } from "@/lib/i18n/language-context";
+import { useIncidents } from "@/hooks/use-incidents";
 
 export function Sidebar({ isMobile, onClose }: { isMobile?: boolean; onClose?: () => void } = {}) {
   const pathname  = usePathname();
-  const initials  = MOCK_USER.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+  const initials  = "SO"; // Safety Officer
   const { t } = useLanguage();
+  const { incidents } = useIncidents();
+  
+  const activeIncidentsCount = incidents.filter(i => i.status !== "resolved").length;
 
   const NAV_ITEMS = [
     { labelKey: "nav_overview",  href: "/dashboard",              icon: LayoutDashboard, badge: null },
-    { labelKey: "nav_incidents", href: "/incidents",              icon: AlertTriangle,   badge: MOCK_STATS.activeIncidents },
+    { labelKey: "nav_incidents", href: "/incidents",              icon: AlertTriangle,   badge: activeIncidentsCount },
     { labelKey: "nav_report",    href: "/report",                 icon: PlusCircle,      badge: null },
     { labelKey: "nav_teams",     href: "/dispatch",               icon: Users,           badge: null },
     { labelKey: "nav_analytics", href: "/analytics",              icon: BarChart2,       badge: null },
@@ -132,8 +135,8 @@ export function Sidebar({ isMobile, onClose }: { isMobile?: boolean; onClose?: (
             {initials}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-bold text-white/90">{MOCK_USER.name}</p>
-            <p className="truncate text-[10px] text-white/40">{MOCK_USER.role}</p>
+            <p className="truncate text-xs font-bold text-white/90">Arjun Mehta</p>
+            <p className="truncate text-[10px] text-white/40">Safety Officer</p>
           </div>
           <Shield className="h-4 w-4 text-emerald-400/80 shrink-0" />
         </div>

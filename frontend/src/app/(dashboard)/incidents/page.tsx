@@ -7,11 +7,10 @@ import {
   PlusCircle, Camera, Video, Mic, FileText, CalendarDays, ChevronDown
 } from "lucide-react";
 import { useIncidents, type StoredIncident } from "@/hooks/use-incidents";
-import { MOCK_INCIDENTS } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 
 // ── Types ──────────────────────────────────────────────────────────────────
-type Severity = StoredIncident["severity"];
+type Severity   = StoredIncident["severity"];
 type SortOption = "newest" | "oldest" | "severity";
 
 const SEVERITY_BADGE: Record<Severity, string> = {
@@ -36,28 +35,6 @@ const METHOD_ICON: Record<StoredIncident["method"], React.ElementType> = {
   photo: Camera, video: Video, voice: Mic, text: FileText,
 };
 
-// Convert MOCK_INCIDENTS to StoredIncident shape so we can merge
-const SEEDED: StoredIncident[] = MOCK_INCIDENTS.map((m, i) => {
-  const statusMap: Record<string, StoredIncident["status"]> = {
-    active: "pending", dispatched: "dispatched", resolved: "resolved", pending: "pending",
-  };
-  return {
-    id:             m.id,
-    title:          m.title,
-    severity:       m.severity as Severity,
-    status:         statusMap[m.status] ?? "pending",
-    location:       m.location,
-    description:    m.description,
-    aiSummary:      m.aiSummary,
-    recommendation: "Follow standard safety procedures.",
-    hazards:        [],
-    teams:          m.responders ?? [],
-    confidence:     m.safetyScore ?? 88,
-    reportedAt:     m.reportedAt,
-    method:         "text" as const,
-  };
-});
-
 // ── Helpers ────────────────────────────────────────────────────────────────
 function fmtDate(iso: string) {
   const d = new Date(iso);
@@ -81,43 +58,30 @@ export default function IncidentsPage() {
   const [page,     setPage]     = useState(1);
   const PER_PAGE = 8;
 
-  // Merge: live IDB incidents first (they'll be newest), then seed data
-  const all = useMemo<StoredIncident[]>(() => {
-    const liveIds = new Set(live.map(l => l.id));
-    return [...live, ...SEEDED.filter(s => !liveIds.has(s.id))];
-  }, [live]);
-
   const filtered = useMemo(() => {
-    let result = all.filter(inc => {
-      // Severity filter
+    let result = live.filter(inc => {
       if (severity !== "all" && inc.severity !== severity) return false;
-      // Text search
       if (query) {
         const haystack = `${inc.id} ${inc.title} ${inc.location} ${inc.description}`.toLowerCase();
         if (!haystack.includes(query.toLowerCase())) return false;
       }
-      // Date from
       if (dateFrom && dateOnly(inc.reportedAt) < dateFrom) return false;
-      // Date to
-      if (dateTo && dateOnly(inc.reportedAt) > dateTo) return false;
+      if (dateTo   && dateOnly(inc.reportedAt) > dateTo)   return false;
       return true;
     });
 
-    // Sort
     result = [...result].sort((a, b) => {
-      if (sortBy === "newest") return new Date(b.reportedAt).getTime() - new Date(a.reportedAt).getTime();
-      if (sortBy === "oldest") return new Date(a.reportedAt).getTime() - new Date(b.reportedAt).getTime();
+      if (sortBy === "newest")   return new Date(b.reportedAt).getTime() - new Date(a.reportedAt).getTime();
+      if (sortBy === "oldest")   return new Date(a.reportedAt).getTime() - new Date(b.reportedAt).getTime();
       if (sortBy === "severity") return SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity];
       return 0;
     });
 
     return result;
-  }, [all, query, severity, sortBy, dateFrom, dateTo]);
+  }, [live, query, severity, sortBy, dateFrom, dateTo]);
 
   const totalPages = Math.ceil(filtered.length / PER_PAGE);
   const paged      = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
-
-  const liveCount = live.length;
 
   return (
     <div className="space-y-6 pb-10">
@@ -127,10 +91,10 @@ export default function IncidentsPage() {
           <h1 className="text-2xl font-extrabold text-white/90">Incident Management</h1>
           <p className="text-xs text-white/40">
             {filtered.length} incident{filtered.length !== 1 ? "s" : ""} found
-            {liveCount > 0 && (
+            {live.length > 0 && (
               <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 inline-block" />
-                {liveCount} reported by you
+                {live.length} reported by you
               </span>
             )}
           </p>
@@ -158,7 +122,6 @@ export default function IncidentsPage() {
               className="w-full rounded-xl border border-white/[0.08] bg-white/[0.04] pl-9 pr-3 py-2 text-xs text-white/90 focus:border-amber-500 focus:bg-white/[0.08] outline-none placeholder:text-white/30"
             />
           </div>
-          {/* Sort */}
           <div className="relative">
             <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/30" />
             <select
@@ -166,8 +129,8 @@ export default function IncidentsPage() {
               onChange={e => { setSortBy(e.target.value as SortOption); setPage(1); }}
               className="appearance-none rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 py-2 pr-8 text-xs font-semibold text-white/70 focus:border-amber-500 outline-none cursor-pointer"
             >
-              <option value="newest" className="bg-slate-900 text-white">Newest First</option>
-              <option value="oldest" className="bg-slate-900 text-white">Oldest First</option>
+              <option value="newest"   className="bg-slate-900 text-white">Newest First</option>
+              <option value="oldest"   className="bg-slate-900 text-white">Oldest First</option>
               <option value="severity" className="bg-slate-900 text-white">By Severity</option>
             </select>
           </div>
@@ -175,7 +138,6 @@ export default function IncidentsPage() {
 
         {/* Row 2: Severity pills + Date range */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-          {/* Severity Pills */}
           <div className="flex flex-wrap gap-1.5">
             {(["all", "critical", "high", "moderate", "low"] as const).map(s => (
               <button
@@ -191,7 +153,6 @@ export default function IncidentsPage() {
             ))}
           </div>
 
-          {/* Date Range */}
           <div className="flex items-center gap-2 ml-auto">
             <CalendarDays className="h-4 w-4 text-white/30 shrink-0" />
             <input
@@ -220,8 +181,26 @@ export default function IncidentsPage() {
       </div>
 
       {/* Incidents Grid */}
-      {paged.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-white/[0.08] bg-white dark:bg-slate-900 py-16 text-center">
+      {live.length === 0 ? (
+        // Global empty state — no incidents reported at all
+        <div className="rounded-2xl border border-dashed border-white/[0.08] py-20 text-center space-y-4">
+          <div className="flex h-16 w-16 mx-auto items-center justify-center rounded-full bg-white/[0.04] border border-white/[0.08]">
+            <AlertTriangle className="h-7 w-7 text-white/20" />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-white/40">No incidents reported yet</p>
+            <p className="text-xs text-white/25 mt-1">Use the button above to report your first incident</p>
+          </div>
+          <Link
+            href="/report"
+            className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-5 py-2.5 text-xs font-bold text-slate-950 hover:bg-amber-400 transition-all shadow-[0_0_20px_rgba(245,158,11,0.25)]"
+          >
+            <PlusCircle className="h-4 w-4" /> Report First Incident
+          </Link>
+        </div>
+      ) : paged.length === 0 ? (
+        // Filtered empty state
+        <div className="rounded-2xl border border-dashed border-white/[0.08] bg-white/[0.01] py-16 text-center">
           <AlertTriangle className="mx-auto h-10 w-10 text-white/20 mb-3" />
           <p className="text-sm font-bold text-white/40">No incidents match your filters</p>
           <p className="text-xs text-white/30 mt-1">Try adjusting the date range or search query</p>
@@ -230,7 +209,6 @@ export default function IncidentsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {paged.map(inc => {
             const MethodIcon = METHOD_ICON[inc.method] ?? FileText;
-            const isLive = live.some(l => l.id === inc.id);
             return (
               <Link
                 key={inc.id}
@@ -245,11 +223,9 @@ export default function IncidentsPage() {
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-mono text-[11px] font-bold text-white/30">{inc.id}</span>
-                      {isLive && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[9px] font-black text-emerald-400 uppercase tracking-wide">
-                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 inline-block" /> Live
-                        </span>
-                      )}
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[9px] font-black text-emerald-400 uppercase tracking-wide">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 inline-block" /> Live
+                      </span>
                     </div>
                     <h3 className="text-base font-bold text-white/90 group-hover:text-amber-600 transition-colors mt-0.5 truncate">
                       {inc.title}
@@ -326,4 +302,3 @@ export default function IncidentsPage() {
     </div>
   );
 }
-

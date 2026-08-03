@@ -246,6 +246,7 @@ export default function ReportIncidentPage() {
         hazards:        data.hazards,
         teams:          data.teams,
         confidence:     data.confidence,
+        workersAtRisk:  data.workersAtRisk,
         reportedAt:     new Date().toISOString(),
         method:         method ?? "text",
         mediaBlob:      mediaBlobRef.current || undefined,

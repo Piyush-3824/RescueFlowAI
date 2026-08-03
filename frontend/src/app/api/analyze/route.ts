@@ -54,12 +54,19 @@ Analyse the incident report below and respond ONLY with valid JSON matching this
   "recommendation": "Immediate action sentence for responders.",
   "teams": ["Team 1", "Team 2", "Team 3"]
 }
+
+CRITICAL RULES for "workersAtRisk":
+- If an IMAGE is provided: carefully and accurately COUNT the exact number of visible human workers/people present in the image. Do NOT guess or estimate — look at every person in the frame.
+- If NO image is provided: estimate a reasonable number based on the text description (e.g. "a worker" = 1, "several workers" = 3-5). If completely unclear, use 1.
+- NEVER return a random number. The value must reflect the actual count from the image or a grounded estimate from the description.
+
 Do not add any markdown, explanation or extra keys.`;
 
     const userText = `Incident Report
 Location: ${location}
 Report Method: ${method}
-Description: ${description || "(no text description provided — analyse image if attached)"}`;
+Description: ${description || "(no text description provided — analyse image if attached)"}
+${imageBase64 ? "NOTE: An image has been attached. Count ALL visible workers/people in it accurately for the workersAtRisk field." : "NOTE: No image attached. Estimate workersAtRisk from the description above."}`;
 
     // ── Build Gemini parts ────────────────────────────────────────────────────
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

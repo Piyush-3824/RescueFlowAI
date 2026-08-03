@@ -7,8 +7,8 @@ import { useState } from "react";
 import { NotificationPanel } from "@/components/ui/notification-panel";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { Sidebar } from "@/components/navigation/sidebar";
-import { MOCK_NOTIFICATIONS, MOCK_USER } from "@/lib/mock-data";
 import { useLanguage } from "@/lib/i18n/language-context";
+import { useIncidents } from "@/hooks/use-incidents";
 
 function useBreadcrumbs(t: (key: any) => string) {
   const pathname = usePathname();
@@ -41,8 +41,13 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { t } = useLanguage();
   const crumbs      = useBreadcrumbs(t);
-  const unreadCount = MOCK_NOTIFICATIONS.filter((n) => !n.read).length;
-  const initials    = MOCK_USER.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+  
+  const { incidents } = useIncidents();
+  // We treat "pending" incidents as new/unread notifications
+  const unreadCount = incidents.filter(i => i.status === "pending").length;
+  
+  // Generic user initials since we don't have real auth yet
+  const initials    = "SO"; // Safety Officer
 
   return (
     <>

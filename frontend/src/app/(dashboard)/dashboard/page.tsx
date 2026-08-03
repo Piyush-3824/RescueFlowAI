@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import {
   AlertTriangle, ShieldCheck, Clock, CheckCircle2, MapPin,
-  Activity, ChevronRight, Volume2, VolumeX
+  Activity, ChevronRight, Volume2, VolumeX, FileText
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { IncidentHeatmap } from "@/components/dashboard/incident-heatmap";
@@ -13,31 +13,51 @@ import { useIncidents } from "@/hooks/use-incidents";
 import { useSpeechSynthesis } from "@/hooks/use-speech";
 import { useLanguage } from "@/lib/i18n/language-context";
 
-// ── Static KPIs ───────────────────────────────────────────────────────────────
-const BASE_KPIS = [
-  { label: "Active Incidents",  value: "12",     sub: "4 requires immediate action", icon: AlertTriangle, iconColor: "text-amber-400",   glowClass: "shadow-[0_0_12px_rgba(245,158,11,0.25)]",  bg: "bg-amber-400/10",   pulse: false },
-  { label: "Critical",          value: "3",      sub: "Zone C, Bay 4, Sector 1",     icon: ShieldCheck,   iconColor: "text-red-400",     glowClass: "shadow-[0_0_12px_rgba(239,68,68,0.3)]",   bg: "bg-red-500/10",     pulse: true  },
-  { label: "Average Response",  value: "4m 12s", sub: "18% faster than last week",   icon: Clock,         iconColor: "text-blue-400",    glowClass: "shadow-[0_0_12px_rgba(59,130,246,0.2)]",  bg: "bg-blue-500/10",    pulse: false },
-  { label: "Safety Score",      value: "87/100", sub: "OSHA Compliant Status",        icon: CheckCircle2,  iconColor: "text-emerald-400", glowClass: "shadow-[0_0_12px_rgba(52,211,153,0.2)]",  bg: "bg-emerald-500/10", pulse: false },
-];
-
-const STATIC_INCIDENTS = [
-  { id: "INC-2024-001", title: "Chemical Leak",  severity: "CRITICAL", severityClass: "bg-red-500/20 text-red-400 border border-red-500/30",        zone: "Zone C",        time: "10 mins ago" },
-  { id: "INC-2024-002", title: "Welding Hazard", severity: "HIGH",     severityClass: "bg-orange-500/20 text-orange-400 border border-orange-500/30", zone: "Zone B",        time: "24 mins ago" },
-  { id: "INC-2024-003", title: "PPE Violation",  severity: "MEDIUM",   severityClass: "bg-amber-500/20 text-amber-400 border border-amber-500/30",    zone: "Assembly Line", time: "1 hour ago"  },
-];
-
 export default function DashboardPage() {
   const { incidents: liveIncidents } = useIncidents();
   const { speak, stop: stopSpeech, speaking } = useSpeechSynthesis();
   const { t } = useLanguage();
 
-  const newIncidents = liveIncidents.filter(
-    (inc) => !STATIC_INCIDENTS.find((s) => s.id === inc.id)
-  );
+  // Derive all KPIs from real data only
+  const activeCount   = liveIncidents.filter((i) => i.status !== "resolved").length;
+  const criticalCount = liveIncidents.filter((i) => i.severity === "critical").length;
 
-  const displayIncidents = [
-    ...newIncidents.map((inc) => ({
+  const kpis = [
+    {
+      label: t("kpi_active_incidents"),
+      value: String(activeCount),
+      sub: activeCount === 0 ? "No active incidents" : `${criticalCount} require immediate action`,
+      icon: AlertTriangle, iconColor: "text-amber-400",
+      glowClass: "shadow-[0_0_12px_rgba(245,158,11,0.25)]", bg: "bg-amber-400/10", pulse: false,
+    },
+    {
+      label: t("kpi_critical"),
+      value: String(criticalCount),
+      sub: criticalCount === 0 ? "All clear" : "Needs immediate attention",
+      icon: ShieldCheck, iconColor: "text-red-400",
+      glowClass: "shadow-[0_0_12px_rgba(239,68,68,0.3)]", bg: "bg-red-500/10", pulse: criticalCount > 0,
+    },
+    {
+      label: t("kpi_avg_response"),
+      value: "N/A",
+      sub: "No response data yet",
+      icon: Clock, iconColor: "text-blue-400",
+      glowClass: "shadow-[0_0_12px_rgba(59,130,246,0.2)]", bg: "bg-blue-500/10", pulse: false,
+    },
+    {
+      label: t("kpi_safety_score"),
+      value: "N/A",
+      sub: "Submit incidents to track score",
+      icon: CheckCircle2, iconColor: "text-emerald-400",
+      glowClass: "shadow-[0_0_12px_rgba(52,211,153,0.2)]", bg: "bg-emerald-500/10", pulse: false,
+    },
+  ];
+
+  // Only show real user-reported incidents (most recent 6)
+  const displayIncidents = liveIncidents
+    .filter((i) => i.status !== "resolved")
+    .slice(0, 6)
+    .map((inc) => ({
       id:            inc.id,
       title:         inc.title,
       severity:      inc.severity.toUpperCase(),
@@ -48,25 +68,14 @@ export default function DashboardPage() {
           : "bg-amber-500/20 text-amber-400 border border-amber-500/30",
       zone: inc.location,
       time: t("dashboard_just_now"),
-    })),
-    ...STATIC_INCIDENTS,
-  ].slice(0, 6);
-
-  const kpis = [
-    { label: t("kpi_active_incidents"),  value: String(12 + newIncidents.length), sub: "4 requires immediate action", icon: AlertTriangle, iconColor: "text-amber-400",   glowClass: "shadow-[0_0_12px_rgba(245,158,11,0.25)]",  bg: "bg-amber-400/10",   pulse: false },
-    { label: t("kpi_critical"),           value: "3",      sub: "Zone C, Bay 4, Sector 1",     icon: ShieldCheck,   iconColor: "text-red-400",     glowClass: "shadow-[0_0_12px_rgba(239,68,68,0.3)]",   bg: "bg-red-500/10",     pulse: true  },
-    { label: t("kpi_avg_response"),       value: "4m 12s", sub: "18% faster than last week",   icon: Clock,         iconColor: "text-blue-400",    glowClass: "shadow-[0_0_12px_rgba(59,130,246,0.2)]",  bg: "bg-blue-500/10",    pulse: false },
-    { label: t("kpi_safety_score"),       value: "87/100", sub: "OSHA Compliant Status",        icon: CheckCircle2,  iconColor: "text-emerald-400", glowClass: "shadow-[0_0_12px_rgba(52,211,153,0.2)]",  bg: "bg-emerald-500/10", pulse: false },
-  ];
+    }));
 
   const handleBriefing = () => {
     if (speaking) { stopSpeech(); return; }
-    const criticalCount = newIncidents.filter((i) => i.severity === "critical").length + 3;
     speak(
-      `Dispatcher briefing. There are currently ${12 + newIncidents.length} active incidents. ` +
-      `${criticalCount} are classified as critical and require immediate attention. ` +
-      `Average response time is 4 minutes 12 seconds, 18 percent faster than last week. ` +
-      `Safety score stands at 87 out of 100.`,
+      `Dispatcher briefing. There are currently ${activeCount} active incidents. ` +
+      `${criticalCount} are classified as critical. ` +
+      `Report an incident to begin tracking safety data.`,
       0.9
     );
   };
@@ -100,11 +109,6 @@ export default function DashboardPage() {
           >
             <AlertTriangle className="h-4 w-4" />
             <span>{t("dashboard_report_btn")}</span>
-            {newIncidents.length > 0 && (
-              <span className="ml-1 rounded-full bg-slate-950/40 text-white text-[10px] font-black w-4 h-4 flex items-center justify-center">
-                {newIncidents.length}
-              </span>
-            )}
           </Link>
         </div>
       </div>
@@ -153,7 +157,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Active Incidents */}
+        {/* Active Incidents — real data only */}
         <div className="glass-card p-5 space-y-4">
           <div className="flex items-center justify-between border-b border-white/[0.07] pb-3">
             <div className="flex items-center gap-2">
@@ -166,41 +170,61 @@ export default function DashboardPage() {
           </div>
 
           <div className="space-y-2">
-            {displayIncidents.map((inc) => (
-              <Link
-                key={inc.id}
-                href={`/incidents/${inc.id}`}
-                className="block rounded-xl bg-white/[0.03] border border-white/[0.06] p-3 hover:bg-white/[0.07] hover:border-white/[0.12] transition-all group"
-              >
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-xs font-bold text-white/75 group-hover:text-amber-400 transition-colors">
-                    {inc.title}
-                  </span>
-                  <span className={cn(
-                    "rounded-md px-2 py-0.5 text-[9px] font-black uppercase",
-                    inc.severityClass,
-                    inc.severity === "CRITICAL" && "animate-pulse"
-                  )}>
-                    {inc.severity}
-                  </span>
+            {displayIncidents.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-10 text-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/[0.04] border border-white/[0.08]">
+                  <FileText className="h-5 w-5 text-white/20" />
                 </div>
-                <div className="flex items-center justify-between text-[10px] text-white/30 font-medium">
-                  <span className="flex items-center gap-1">
-                    <MapPin className="h-2.5 w-2.5" />{inc.zone}
-                  </span>
-                  <span>{inc.time}</span>
+                <div>
+                  <p className="text-xs font-bold text-white/40">No active incidents</p>
+                  <p className="text-[11px] text-white/20 mt-1">Report one to see it here</p>
                 </div>
-              </Link>
-            ))}
+                <Link
+                  href="/report"
+                  className="mt-1 inline-flex items-center gap-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 text-[11px] font-bold text-amber-400 hover:bg-amber-500/20 transition-all"
+                >
+                  <AlertTriangle className="h-3 w-3" /> Report Incident
+                </Link>
+              </div>
+            ) : (
+              displayIncidents.map((inc) => (
+                <Link
+                  key={inc.id}
+                  href={`/incidents/${inc.id}`}
+                  className="block rounded-xl bg-white/[0.03] border border-white/[0.06] p-3 hover:bg-white/[0.07] hover:border-white/[0.12] transition-all group"
+                >
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-xs font-bold text-white/75 group-hover:text-amber-400 transition-colors">
+                      {inc.title}
+                    </span>
+                    <span className={cn(
+                      "rounded-md px-2 py-0.5 text-[9px] font-black uppercase",
+                      inc.severityClass,
+                      inc.severity === "CRITICAL" && "animate-pulse"
+                    )}>
+                      {inc.severity}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-[10px] text-white/30 font-medium">
+                    <span className="flex items-center gap-1">
+                      <MapPin className="h-2.5 w-2.5" />{inc.zone}
+                    </span>
+                    <span>{inc.time}</span>
+                  </div>
+                </Link>
+              ))
+            )}
           </div>
 
-          <Link
-            href="/incidents"
-            className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.07] text-xs font-bold text-white/50 hover:bg-white/[0.08] hover:text-white/70 transition-colors"
-          >
-            <span>{t("dashboard_manage_all")} {12 + newIncidents.length} {t("dashboard_incidents_suffix")}</span>
-            <ChevronRight className="h-3.5 w-3.5" />
-          </Link>
+          {displayIncidents.length > 0 && (
+            <Link
+              href="/incidents"
+              className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.07] text-xs font-bold text-white/50 hover:bg-white/[0.08] hover:text-white/70 transition-colors"
+            >
+              <span>{t("dashboard_manage_all")} {activeCount} {t("dashboard_incidents_suffix")}</span>
+              <ChevronRight className="h-3.5 w-3.5" />
+            </Link>
+          )}
         </div>
       </div>
 

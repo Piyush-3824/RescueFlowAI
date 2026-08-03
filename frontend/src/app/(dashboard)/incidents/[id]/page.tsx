@@ -6,32 +6,10 @@ import { useParams } from "next/navigation";
 import {
   ArrowLeft, MapPin, Brain, Users, AlertTriangle, Radio,
   Camera, Video, Mic, FileText, Download, Check, Clock,
-  Volume2, Image as ImageIcon
+  Volume2, PackageOpen
 } from "lucide-react";
-import { MOCK_INCIDENTS } from "@/lib/mock-data";
 import { useIncidents, type StoredIncident } from "@/hooks/use-incidents";
 import { cn } from "@/lib/utils";
-
-// ── Static seeded data (mirrors incidents list page) ─────────────────────────
-function toStored(m: typeof MOCK_INCIDENTS[0], idx: number): StoredIncident {
-  const statusMap: Record<string, StoredIncident["status"]> = {
-    active: "pending", dispatched: "dispatched", resolved: "resolved", pending: "pending",
-  };
-  return {
-    id: m.id, title: m.title,
-    severity: m.severity as StoredIncident["severity"],
-    status:   statusMap[m.status] ?? "pending",
-    location: m.location,
-    description: m.description,
-    aiSummary:   m.aiSummary,
-    recommendation: "Follow standard safety procedures.",
-    hazards: [],
-    teams:   m.responders ?? [],
-    confidence: m.safetyScore ?? 88,
-    reportedAt: m.reportedAt,
-    method: "text",
-  };
-}
 
 const SEVERITY_COLOR: Record<StoredIncident["severity"], string> = {
   critical: "bg-red-500",
@@ -65,14 +43,7 @@ export default function IncidentDetailPage() {
   const incidentId = (params?.["id"] as string) ?? "";
   const { incidents: live } = useIncidents();
 
-  // Merge live + seeded
-  const all = useMemo<StoredIncident[]>(() => {
-    const liveIds = new Set(live.map(l => l.id));
-    return [...live, ...MOCK_INCIDENTS.map((m, i) => toStored(m, i)).filter(s => !liveIds.has(s.id))];
-  }, [live]);
-
-  const incident = all.find(i => i.id === incidentId) ?? all[0];
-  const isLive   = live.some(l => l.id === incident?.id);
+  const incident = useMemo(() => live.find(i => i.id === incidentId), [live, incidentId]);
 
   // Derive media object URL for the blob (must be done client-side)
   const [mediaUrl, setMediaUrl] = useState<string | null>(null);
@@ -88,21 +59,42 @@ export default function IncidentDetailPage() {
     return () => { if (url) URL.revokeObjectURL(url); };
   }, [incident?.id, incident?.mediaBlob]);
 
-  if (!incident) return null;
+  // ── Incident not found ────────────────────────────────────────────────────
+  if (!incident) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] text-center gap-5">
+        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white/[0.04] border border-white/[0.08]">
+          <PackageOpen className="h-9 w-9 text-white/20" />
+        </div>
+        <div>
+          <h2 className="text-lg font-extrabold text-white/70">Incident Not Found</h2>
+          <p className="text-xs text-white/30 mt-1">
+            {incidentId ? `No incident with ID "${incidentId}" exists.` : "No incident ID provided."}
+          </p>
+        </div>
+        <Link
+          href="/incidents"
+          className="inline-flex items-center gap-2 rounded-xl bg-amber-500/10 border border-amber-500/20 px-4 py-2 text-xs font-bold text-amber-400 hover:bg-amber-500/20 transition-all"
+        >
+          <ArrowLeft className="h-4 w-4" /> Back to Incidents
+        </Link>
+      </div>
+    );
+  }
 
   const currentStep =
-    incident.status === "resolved"    ? 5 :
-    incident.status === "dispatched"  ? 4 :
+    incident.status === "resolved"      ? 5 :
+    incident.status === "dispatched"    ? 4 :
     incident.status === "ai_processing" ? 2 : 1;
 
-  const mediaMime  = incident.mediaBlob?.type ?? "";
-  const isImage    = mediaMime.startsWith("image/");
-  const isVideo    = mediaMime.startsWith("video/");
-  const isAudio    = mediaMime.startsWith("audio/");
+  const mediaMime = incident.mediaBlob?.type ?? "";
+  const isImage   = mediaMime.startsWith("image/");
+  const isVideo   = mediaMime.startsWith("video/");
+  const isAudio   = mediaMime.startsWith("audio/");
 
   function handleDownload() {
     if (!incident || !incident.mediaBlob) return;
-    const ext  = mediaMime.split("/")[1] || "bin";
+    const ext = mediaMime.split("/")[1] || "bin";
     downloadBlob(incident.mediaBlob, `evidence_${incident.id}.${ext}`);
   }
 
@@ -121,11 +113,9 @@ export default function IncidentDetailPage() {
               <span className={cn("rounded-md px-2 py-0.5 text-[10px] font-black uppercase text-white", SEVERITY_COLOR[incident.severity])}>
                 {incident.severity}
               </span>
-              {isLive && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-black text-emerald-400">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 inline-block" /> Live
-                </span>
-              )}
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-black text-emerald-400">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 inline-block" /> Live
+              </span>
             </div>
             <h1 className="text-xl font-extrabold text-white/90">{incident.title}</h1>
           </div>
@@ -157,7 +147,7 @@ export default function IncidentDetailPage() {
               )}
             </div>
 
-            {/* ── Real media from IDB ── */}
+            {/* Real media */}
             {mediaUrl && isImage && (
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-xs font-bold text-white/70">
@@ -185,22 +175,13 @@ export default function IncidentDetailPage() {
               </div>
             )}
 
-            {/* ── Fallback for seeded / text incidents ── */}
+            {/* No media uploaded */}
             {!mediaUrl && (
-              <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-xl border border-white/[0.08] bg-white/[0.04] p-4 text-center space-y-2">
-                  <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg bg-white dark:bg-slate-900 border border-white/[0.08] text-amber-500 shadow-xs">
-                    <Camera className="h-5 w-5" />
-                  </div>
-                  <p className="text-xs font-bold text-white/80">Photo Evidence</p>
-                  <p className="text-[10px] text-white/30 italic">Not available for historical records</p>
-                </div>
-                <div className="rounded-xl border border-white/[0.08] bg-white/[0.04] p-4 text-center space-y-2">
-                  <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg bg-white dark:bg-slate-900 border border-white/[0.08] text-blue-600 shadow-xs">
-                    <Video className="h-5 w-5" />
-                  </div>
-                  <p className="text-xs font-bold text-white/80">Video Evidence</p>
-                  <p className="text-[10px] text-white/30 italic">Not available for historical records</p>
+              <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-white/[0.08] bg-white/[0.02] py-10 text-center">
+                <FileText className="h-8 w-8 text-white/20" />
+                <div>
+                  <p className="text-xs font-bold text-white/40">No media attached</p>
+                  <p className="text-[10px] text-white/25 mt-0.5">This incident was reported via text</p>
                 </div>
               </div>
             )}
@@ -218,8 +199,8 @@ export default function IncidentDetailPage() {
               <span>Reported via:</span>
               <span className="font-bold text-white/80 capitalize flex items-center gap-1">
                 {incident.method === "photo" && <Camera className="h-3.5 w-3.5 text-amber-500" />}
-                {incident.method === "video" && <Video className="h-3.5 w-3.5 text-blue-500" />}
-                {incident.method === "voice" && <Mic className="h-3.5 w-3.5 text-red-500" />}
+                {incident.method === "video" && <Video  className="h-3.5 w-3.5 text-blue-500" />}
+                {incident.method === "voice" && <Mic    className="h-3.5 w-3.5 text-red-500" />}
                 {incident.method === "text"  && <FileText className="h-3.5 w-3.5 text-white/30" />}
                 {incident.method}
               </span>
@@ -277,8 +258,12 @@ export default function IncidentDetailPage() {
                   </ul>
                 </div>
                 <div className="rounded-xl bg-orange-50 border border-orange-200 p-2.5 text-center">
-                  <span className="text-base font-extrabold text-orange-700">3 Workers</span>
-                  <span className="block text-[10px] text-orange-600">Immediate Evacuation Needed</span>
+                  <span className="text-base font-extrabold text-orange-700">
+                    {incident.workersAtRisk != null
+                      ? `${incident.workersAtRisk} Worker${incident.workersAtRisk !== 1 ? "s" : ""}`
+                      : "N/A"}
+                  </span>
+                  <span className="block text-[10px] text-orange-600">Workers at Risk</span>
                 </div>
               </div>
             )}
@@ -356,7 +341,7 @@ export default function IncidentDetailPage() {
         <h3 className="text-xs font-bold uppercase tracking-wider text-white/30">Incident Lifecycle</h3>
         <div className="flex items-center justify-between">
           {LIFECYCLE_STEPS.map((title, idx) => {
-            const step = idx + 1;
+            const step      = idx + 1;
             const isDone    = currentStep > step;
             const isCurrent = currentStep === step;
             return (

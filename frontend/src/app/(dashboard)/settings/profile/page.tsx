@@ -2,19 +2,21 @@
 
 import { useState } from "react";
 import { User, Mail, Phone, Building2, MapPin, Shield, Camera, Save, Award, Activity, CheckCircle2 } from "lucide-react";
-import { MOCK_USER } from "@/lib/mock-data";
 import { useLanguage } from "@/lib/i18n/language-context";
 
+// Fallback initial state for the profile
+const DEFAULT_USER = {
+  name: "Arjun Mehta",
+  email: "arjun.m@techcorp.com",
+  phone: "+91 98765 43210",
+  company: "TechCorp Industries",
+  department: "Safety & Compliance",
+  location: "Mumbai Facility, Zone B",
+  role: "Safety Officer",
+};
+
 export default function ProfilePage() {
-  const [form, setForm] = useState({
-    name:       MOCK_USER.name,
-    email:      MOCK_USER.email,
-    phone:      MOCK_USER.phone,
-    company:    MOCK_USER.company,
-    department: MOCK_USER.department,
-    location:   MOCK_USER.location,
-    role:       MOCK_USER.role,
-  });
+  const [form, setForm] = useState(DEFAULT_USER);
   const [saved, setSaved] = useState(false);
   const { t } = useLanguage();
   const initials = form.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);

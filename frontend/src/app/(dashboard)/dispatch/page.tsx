@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Users, Phone, Radio, ShieldAlert, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Users, Radio } from "lucide-react";
 
 const RESPONSE_TEAMS = [
   { id: "TEAM-1", name: "Fire Safety Unit", lead: "Captain R. Sharma", members: 6, status: "DISPATCHED", zone: "Welding Zone B", phone: "+91 98765 43210" },
