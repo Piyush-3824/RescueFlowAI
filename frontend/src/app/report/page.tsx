@@ -75,16 +75,8 @@ export default function ReportIncidentPage() {
   const typedSummary = useTypewriter(aiResult?.summary || "", 18, resultReady);
 
   // ── Auto-read AI brief when result appears ────────────────────────────────
-  useEffect(() => {
-    if (!resultReady || !aiResult) return;
-    const readoutText =
-      `Alert! ${aiResult.title} detected. Severity: ${aiResult.severity}. ` +
-      `Confidence score: ${aiResult.confidence} percent. ` +
-      `${aiResult.recommendation} ` +
-      `Recommended teams: ${aiResult.teams.join(", ")}.`;
-    speak(readoutText, 0.9);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resultReady, aiResult]);
+  // Removed automatic speech per user request; will only trigger via button click.
+  // useEffect(() => { ... }, []);
   // Sync speech-to-text transcript → description field
   useEffect(() => { if (transcript) setTextDescription(transcript); }, [transcript]);
 
