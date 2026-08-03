@@ -8,7 +8,7 @@ import {
   Camera, Video, Mic, FileText, MapPin, Clock,
   CheckCircle2, ArrowRight, AlertTriangle, Users,
   ChevronLeft, Sparkles, RefreshCw, MicOff, Volume2, VolumeX,
-  Square, ImageIcon, Film
+  Square, ImageIcon, Film, Play
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSpeechSynthesis, useSpeechRecognition } from "@/hooks/use-speech";
@@ -510,12 +510,12 @@ export default function ReportIncidentPage() {
                       `Alert! ${aiResult?.title} detected. Severity: ${aiResult?.severity}. ${aiResult?.recommendation} Recommended teams: ${aiResult?.teams.join(", ")}.`,
                       0.9
                     )}
-                    className={cn("inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all",
-                      speaking ? "bg-blue-600 text-white" : "bg-white/[0.08] text-white/60 hover:bg-blue-50 hover:text-blue-700"
+                    className={cn("inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold transition-all shadow-sm",
+                      speaking ? "bg-blue-600 text-white shadow-blue-500/25" : "bg-blue-500 hover:bg-blue-400 text-white"
                     )}
                   >
-                    {speaking ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
-                    {speaking ? "Stop" : "Read Aloud"}
+                    {speaking ? <Square className="h-4 w-4 fill-current" /> : <Play className="h-4 w-4 fill-current" />}
+                    {speaking ? "Stop Playing" : "Play AI Summary"}
                   </button>
                 </div>
 
