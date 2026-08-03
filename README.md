@@ -134,5 +134,5 @@ graph TD
 Our vision is to transform emergency response by enabling AI-assistance with incident detection, intelligent dispatch, and real-time coordination. RescueFlow AI aims to reduce response times, improve situational awareness, and support safer workplaces and communities through automation and data-driven decision-making.
 
 <div align="center">
-  <i>Developed with ❤️ by the RescueFlow AI Team</i>
+  <i>Developed with ❤️ by the RescueFlow AI Team.</i>
 </div>  
