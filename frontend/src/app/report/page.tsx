@@ -37,7 +37,7 @@ function useTypewriter(text: string, speed = 18, active = false) {
 export default function ReportIncidentPage() {
   const router = useRouter();
 
-  const [step, setStep]     = useState<1 | 2 | 3>(1);
+  const [step, setStep]     = useState<1 | 2 | 3 | 4>(1);
   const [method, setMethod] = useState<MethodType>(null);
 
   // Media state
@@ -56,6 +56,7 @@ export default function ReportIncidentPage() {
   // AI / analysis state
   const [analyzing,    setAnalyzing]    = useState(false);
   const [analysisStep, setAnalysisStep] = useState(0);
+  const [dispatchStep, setDispatchStep] = useState(0);
   const [resultReady,  setResultReady]  = useState(false);
   const [aiResult,     setAiResult]     = useState<AIResult | null>(null);
 
@@ -277,7 +278,7 @@ export default function ReportIncidentPage() {
           <Link href="/dashboard" className="inline-flex items-center gap-1.5 text-xs font-semibold text-white/40 hover:text-white/90 transition-colors">
             <ChevronLeft className="h-4 w-4" />Back to Dashboard
           </Link>
-          <span className="text-xs font-mono font-bold text-white/30">Step {step} of 3</span>
+          <span className="text-xs font-mono font-bold text-white/30">Step {step > 3 ? 3 : step} of 3</span>
         </div>
 
         {/* ================================================================= */}
@@ -577,7 +578,23 @@ export default function ReportIncidentPage() {
                 </div>
 
                 <button
-                  onClick={() => { stopSpeech(); router.push("/incidents"); }}
+                  onClick={() => { 
+                    stopSpeech();
+                    setStep(4);
+                    setDispatchStep(0);
+                    const teams = aiResult?.teams || ["Emergency Responders"];
+                    
+                    setTimeout(() => setDispatchStep(1), 1000); // Network connection
+                    
+                    teams.forEach((_, idx) => {
+                       setTimeout(() => setDispatchStep(idx + 2), 1000 + (idx + 1) * 1200);
+                    });
+                    
+                    const finalStep = teams.length + 2;
+                    setTimeout(() => setDispatchStep(finalStep), 1000 + teams.length * 1200 + 800);
+                    
+                    setTimeout(() => router.push("/dashboard"), 1000 + teams.length * 1200 + 2000);
+                  }}
                   className="w-full flex items-center justify-center gap-2 rounded-2xl bg-amber-500 py-4 text-base font-extrabold text-slate-950 shadow-md hover:bg-amber-400 transition-all active:scale-[0.98]"
                 >
                   <span>Start Response Workflow</span>
@@ -585,6 +602,47 @@ export default function ReportIncidentPage() {
                 </button>
               </div>
             )}
+          </motion.div>
+        )}
+
+        {/* ================================================================= */}
+        {/* STEP 4 – DISPATCHING                                               */}
+        {/* ================================================================= */}
+        {step === 4 && (
+          <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="space-y-6">
+            <div className="glass-card p-8 text-center space-y-6 shadow-xs">
+              <div className="flex justify-center">
+                <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-blue-50 border border-blue-200">
+                  <RefreshCw className="h-8 w-8 text-blue-500 animate-spin" />
+                </div>
+              </div>
+              <div>
+                <h2 className="text-xl font-extrabold text-white/90">Dispatching Response Teams</h2>
+                <p className="text-xs text-white/40 mt-1 font-mono">Initiating communication protocols…</p>
+              </div>
+              <div className="max-w-xs mx-auto text-left space-y-2 text-xs font-semibold">
+                <div className="flex items-center gap-2.5">
+                  {dispatchStep > 0
+                    ? <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                    : <div className="h-4 w-4 rounded-full border border-white/[0.2] shrink-0" />}
+                  <span className={dispatchStep > 0 ? "text-white/90 font-bold" : "text-white/30"}>Connecting to dispatch network</span>
+                </div>
+                {aiResult?.teams?.map((team, idx) => (
+                  <div key={team} className="flex items-center gap-2.5">
+                    {dispatchStep > idx + 1
+                      ? <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                      : <div className="h-4 w-4 rounded-full border border-white/[0.2] shrink-0" />}
+                    <span className={dispatchStep > idx + 1 ? "text-white/90 font-bold" : "text-white/30"}>Notifying {team}</span>
+                  </div>
+                ))}
+                <div className="flex items-center gap-2.5">
+                  {dispatchStep > (aiResult?.teams?.length || 0) + 1
+                    ? <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                    : <div className="h-4 w-4 rounded-full border border-white/[0.2] shrink-0" />}
+                  <span className={dispatchStep > (aiResult?.teams?.length || 0) + 1 ? "text-white/90 font-bold" : "text-white/30"}>Sending exact coordinates &amp; briefing</span>
+                </div>
+              </div>
+            </div>
           </motion.div>
         )}
       </div>

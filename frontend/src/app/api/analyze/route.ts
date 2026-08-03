@@ -32,13 +32,29 @@ const SEVERITY_COLORS: Record<string, string> = {
   low:      "bg-emerald-600",
 };
 
+const MOCK_AI_RESULT: AIResult = {
+  title: "Simulated Incident (Mock Data)",
+  severity: "high",
+  severityColor: "bg-orange-500",
+  confidence: 92,
+  workersAtRisk: 2,
+  hazards: ["Simulated Hazard", "Mock Data Risk"],
+  summary: "This is a simulated incident report because a valid Gemini API key was not provided or the request timed out. Please configure a valid API key for real analysis.",
+  recommendation: "Review the system configuration and update the API keys.",
+  teams: ["System Admin", "Safety Officer"]
+};
+
 export async function POST(req: NextRequest) {
   try {
     const body: AnalyzeRequest = await req.json();
     const { description, location, method, imageBase64, imageMime } = body;
 
-    if (!GEMINI_API_KEY) {
-      return NextResponse.json({ error: "No Gemini API key configured." }, { status: 500 });
+    // Use mock data immediately if key is missing or appears obviously invalid/fake
+    if (!GEMINI_API_KEY || GEMINI_API_KEY.includes("your_gemini_key") || GEMINI_API_KEY.length < 10) {
+      console.log("Using mock data due to missing or invalid Gemini API key.");
+      // Small delay to simulate processing
+      await new Promise(r => setTimeout(r, 2500));
+      return NextResponse.json(MOCK_AI_RESULT);
     }
 
     // ── Build prompt ──────────────────────────────────────────────────────────
@@ -84,41 +100,56 @@ ${imageBase64 ? "NOTE: An image has been attached. Count ALL visible workers/peo
       generationConfig:   { responseMimeType: "application/json", temperature: 0.3 },
     };
 
-    const geminiRes = await fetch(GEMINI_URL, {
-      method:  "POST",
-      headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify(geminiBody),
-    });
+    // Add a timeout to prevent hanging forever
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 seconds
 
-    if (!geminiRes.ok) {
-      const errText = await geminiRes.text();
-      console.error("Gemini error:", errText);
-      return NextResponse.json({ error: `Gemini API error: ${geminiRes.status}` }, { status: 502 });
+    try {
+      const geminiRes = await fetch(GEMINI_URL, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify(geminiBody),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+
+      if (!geminiRes.ok) {
+        const errText = await geminiRes.text();
+        console.error("Gemini error:", errText);
+        console.log("Falling back to mock data due to API error.");
+        return NextResponse.json(MOCK_AI_RESULT);
+      }
+
+      const geminiData = await geminiRes.json();
+      const rawText    = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text ?? "{}";
+
+      // Strip markdown fences if present
+      const clean = rawText.replace(/^```json\s*/i, "").replace(/```\s*$/i, "").trim();
+      const parsed = JSON.parse(clean) as Partial<AIResult>;
+
+      const severity = (parsed.severity ?? "high") as AIResult["severity"];
+      const result: AIResult = {
+        title:          parsed.title          ?? "Industrial Incident Detected",
+        severity,
+        severityColor:  SEVERITY_COLORS[severity] ?? "bg-orange-500",
+        confidence:     parsed.confidence     ?? 88,
+        workersAtRisk:  parsed.workersAtRisk  ?? 3,
+        hazards:        parsed.hazards        ?? [],
+        summary:        parsed.summary        ?? "",
+        recommendation: parsed.recommendation ?? "",
+        teams:          parsed.teams          ?? [],
+      };
+
+      return NextResponse.json(result);
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      console.error("Fetch error or timeout:", fetchError);
+      console.log("Falling back to mock data due to fetch error.");
+      return NextResponse.json(MOCK_AI_RESULT);
     }
-
-    const geminiData = await geminiRes.json();
-    const rawText    = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text ?? "{}";
-
-    // Strip markdown fences if present
-    const clean = rawText.replace(/^```json\s*/i, "").replace(/```\s*$/i, "").trim();
-    const parsed = JSON.parse(clean) as Partial<AIResult>;
-
-    const severity = (parsed.severity ?? "high") as AIResult["severity"];
-    const result: AIResult = {
-      title:          parsed.title          ?? "Industrial Incident Detected",
-      severity,
-      severityColor:  SEVERITY_COLORS[severity] ?? "bg-orange-500",
-      confidence:     parsed.confidence     ?? 88,
-      workersAtRisk:  parsed.workersAtRisk  ?? 3,
-      hazards:        parsed.hazards        ?? [],
-      summary:        parsed.summary        ?? "",
-      recommendation: parsed.recommendation ?? "",
-      teams:          parsed.teams          ?? [],
-    };
-
-    return NextResponse.json(result);
   } catch (err) {
     console.error("analyze route error:", err);
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    console.log("Falling back to mock data due to general error.");
+    return NextResponse.json(MOCK_AI_RESULT);
   }
 }
