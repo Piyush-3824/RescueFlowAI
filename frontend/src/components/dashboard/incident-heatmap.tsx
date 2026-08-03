@@ -14,9 +14,11 @@ export function IncidentHeatmap() {
   // Build location groups
   const locationMap = new Map<string, typeof incidents>();
   for (const inc of activeIncidents) {
-    const key = inc.location;
+    const parts = inc.location.split(",");
+    const key = (parts[0] ?? inc.location).trim() || "Unknown Location";
     if (!locationMap.has(key)) locationMap.set(key, []);
-    locationMap.get(key)!.push(inc);
+    const existing = locationMap.get(key);
+    if (existing) existing.push(inc);
   }
 
   const zones = Array.from(locationMap.entries())
