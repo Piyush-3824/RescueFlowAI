@@ -32,7 +32,7 @@ export default function LandingPage() {
   const goReport = (method?: string) =>
     router.push(method ? `/report?method=${method}` : "/report");
 
-  const currentLang = LANGS.find(l => l.code === language) ?? LANGS[0];
+  const currentLang = LANGS.find(l => l.code === language) || LANGS[0]!;
 
   return (
     <div className="min-h-screen font-sans antialiased text-white/85">
