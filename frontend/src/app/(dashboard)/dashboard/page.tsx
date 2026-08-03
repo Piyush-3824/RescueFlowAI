@@ -18,9 +18,46 @@ export default function DashboardPage() {
   const { speak, stop: stopSpeech, speaking } = useSpeechSynthesis();
   const { t } = useLanguage();
 
-  // Derive all KPIs from real data only
-  const activeCount   = liveIncidents.filter((i) => i.status !== "resolved").length;
-  const criticalCount = liveIncidents.filter((i) => i.severity === "critical").length;
+  const resolvedCount  = liveIncidents.filter((i) => i.status === "resolved").length;
+  const totalCount     = liveIncidents.length;
+  const activeCount    = liveIncidents.filter((i) => i.status !== "resolved").length;
+  const criticalCount  = liveIncidents.filter((i) => i.severity === "critical").length;
+
+  // Average Response: mean minutes since each active incident was reported
+  const avgResponseMins = (() => {
+    const active = liveIncidents.filter((i) => i.status !== "resolved");
+    if (active.length === 0) return null;
+    const now = Date.now();
+    const totalMins = active.reduce((sum, i) => {
+      const diff = now - new Date(i.reportedAt).getTime();
+      return sum + Math.max(0, Math.floor(diff / 60000));
+    }, 0);
+    return Math.round(totalMins / active.length);
+  })();
+
+  const avgResponseLabel = avgResponseMins === null
+    ? "N/A"
+    : avgResponseMins < 60
+      ? `${avgResponseMins}m`
+      : `${Math.floor(avgResponseMins / 60)}h ${avgResponseMins % 60}m`;
+
+  // Safety Score: 100 minus penalty per active critical/high/moderate incident
+  const safetyScore = (() => {
+    if (totalCount === 0) return null;
+    const WEIGHTS: Record<string, number> = { critical: 20, high: 10, moderate: 5, low: 2 };
+    const activePenalty = liveIncidents
+      .filter((i) => i.status !== "resolved")
+      .reduce((sum, i) => sum + (WEIGHTS[i.severity] ?? 5), 0);
+    const resolvedBonus = resolvedCount * 3;
+    return Math.max(0, Math.min(100, 100 - activePenalty + resolvedBonus));
+  })();
+
+  const safetyScoreLabel = safetyScore === null ? "N/A" : `${safetyScore}%`;
+  const safetyScoreSub   = safetyScore === null
+    ? "Submit incidents to track score"
+    : safetyScore >= 80 ? "Good safety standing"
+    : safetyScore >= 50 ? "Needs attention"
+    : "Critical — act immediately";
 
   const kpis = [
     {
@@ -39,16 +76,17 @@ export default function DashboardPage() {
     },
     {
       label: t("kpi_avg_response"),
-      value: "N/A",
-      sub: "No response data yet",
+      value: avgResponseLabel,
+      sub: avgResponseMins === null ? "No response data yet" : `Across ${liveIncidents.filter(i => i.status !== "resolved").length} active incident${activeCount !== 1 ? "s" : ""}`,
       icon: Clock, iconColor: "text-blue-400",
       glowClass: "shadow-[0_0_12px_rgba(59,130,246,0.2)]", bg: "bg-blue-500/10", pulse: false,
     },
     {
       label: t("kpi_safety_score"),
-      value: "N/A",
-      sub: "Submit incidents to track score",
-      icon: CheckCircle2, iconColor: "text-emerald-400",
+      value: safetyScoreLabel,
+      sub: safetyScoreSub,
+      icon: CheckCircle2,
+      iconColor: safetyScore === null ? "text-emerald-400" : safetyScore >= 80 ? "text-emerald-400" : safetyScore >= 50 ? "text-amber-400" : "text-red-400",
       glowClass: "shadow-[0_0_12px_rgba(52,211,153,0.2)]", bg: "bg-emerald-500/10", pulse: false,
     },
   ];
