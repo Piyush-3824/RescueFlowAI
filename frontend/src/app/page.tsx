@@ -56,12 +56,12 @@ export default function LandingPage() {
             <Link href="#about" className="hover:text-white/80 transition-colors">{t("landing_about")}</Link>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             {/* ── Premium Language Switcher ── */}
             <div className="relative">
               <button
                 onClick={() => setLangOpen(prev => !prev)}
-                className="flex items-center gap-1.5 rounded-xl border border-white/[0.12] bg-white/[0.05] px-3 py-2 text-xs font-bold text-white/70 hover:border-amber-400/40 hover:bg-white/[0.09] hover:text-white transition-all"
+                className="flex items-center gap-1.5 rounded-xl border border-white/[0.12] bg-white/[0.05] px-2.5 py-2 text-xs font-bold text-white/70 hover:border-amber-400/40 hover:bg-white/[0.09] hover:text-white transition-all"
               >
                 <Globe className="h-3.5 w-3.5 text-amber-400" />
                 <span>{currentLang.label}</span>
@@ -94,14 +94,18 @@ export default function LandingPage() {
               )}
             </div>
 
-            <Link href="/login" className="text-sm font-medium text-white/40 hover:text-white/70 px-3 py-2 transition-colors">
+            {/* Login — hidden on mobile */}
+            <Link href="/login" className="hidden sm:block text-sm font-medium text-white/40 hover:text-white/70 px-3 py-2 transition-colors">
               {t("landing_login")}
             </Link>
+
+            {/* Report button — icon-only on mobile, full text on sm+ */}
             <button
               onClick={() => goReport()}
-              className="flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2 text-sm font-bold text-slate-950 shadow-[0_0_16px_rgba(245,158,11,0.3)] hover:bg-amber-400 transition-all active:scale-95"
+              className="flex items-center gap-2 rounded-xl bg-amber-500 px-3 sm:px-4 py-2 text-sm font-bold text-slate-950 shadow-[0_0_16px_rgba(245,158,11,0.3)] hover:bg-amber-400 transition-all active:scale-95"
             >
-              <span>🚨 {t("landing_report_btn")}</span>
+              <span>🚨</span>
+              <span className="hidden sm:inline">{t("landing_report_btn")}</span>
             </button>
           </div>
         </nav>
