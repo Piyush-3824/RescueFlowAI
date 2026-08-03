@@ -64,7 +64,7 @@ export default function SettingsPage() {
           </div>
 
           <div className="rounded-xl bg-white/[0.04] border border-white/[0.08] p-3 flex items-center justify-between hover:bg-white/[0.06] transition-colors">
-            <span className="font-bold text-white/90">Supabase Security Log</span>
+            <span className="font-bold text-white/90">IndexedDB</span>
             <span className="rounded bg-emerald-500/20 px-2 py-0.5 text-[9px] font-black uppercase text-emerald-400 border border-emerald-500/30 shadow-[0_0_8px_rgba(52,211,153,0.15)]">Connected</span>
           </div>
         </div>
