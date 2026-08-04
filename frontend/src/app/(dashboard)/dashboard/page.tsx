@@ -21,7 +21,7 @@ export default function DashboardPage() {
   const resolvedCount  = liveIncidents.filter((i) => i.status === "resolved").length;
   const totalCount     = liveIncidents.length;
   const activeCount    = liveIncidents.filter((i) => i.status !== "resolved").length;
-  const criticalCount  = liveIncidents.filter((i) => i.severity === "critical").length;
+  const criticalCount  = liveIncidents.filter((i) => i.severity === "critical" && i.status !== "resolved").length;
 
   // Average Response: mean minutes since each active incident was reported
   const avgResponseMins = (() => {
