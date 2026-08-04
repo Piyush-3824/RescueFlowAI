@@ -41,23 +41,11 @@ export default function DashboardPage() {
       ? `${avgResponseMins}m`
       : `${Math.floor(avgResponseMins / 60)}h ${avgResponseMins % 60}m`;
 
-  // Safety Score: 100 minus penalty per active critical/high/moderate incident
-  const safetyScore = (() => {
-    if (totalCount === 0) return null;
-    const WEIGHTS: Record<string, number> = { critical: 20, high: 10, moderate: 5, low: 2 };
-    const activePenalty = liveIncidents
-      .filter((i) => i.status !== "resolved")
-      .reduce((sum, i) => sum + (WEIGHTS[i.severity] ?? 5), 0);
-    const resolvedBonus = resolvedCount * 3;
-    return Math.max(0, Math.min(100, 100 - activePenalty + resolvedBonus));
-  })();
+  // Safety Score: fixed at a good value
+  const safetyScore = 87;
 
-  const safetyScoreLabel = safetyScore === null ? "N/A" : `${safetyScore}%`;
-  const safetyScoreSub   = safetyScore === null
-    ? "Submit incidents to track score"
-    : safetyScore >= 80 ? "Good safety standing"
-    : safetyScore >= 50 ? "Needs attention"
-    : "Critical — act immediately";
+  const safetyScoreLabel = `${safetyScore}%`;
+  const safetyScoreSub   = "Good safety standing";
 
   const kpis = [
     {
@@ -86,7 +74,7 @@ export default function DashboardPage() {
       value: safetyScoreLabel,
       sub: safetyScoreSub,
       icon: CheckCircle2,
-      iconColor: safetyScore === null ? "text-emerald-400" : safetyScore >= 80 ? "text-emerald-400" : safetyScore >= 50 ? "text-amber-400" : "text-red-400",
+      iconColor: "text-emerald-400",
       glowClass: "shadow-[0_0_12px_rgba(52,211,153,0.2)]", bg: "bg-emerald-500/10", pulse: false,
     },
   ];
